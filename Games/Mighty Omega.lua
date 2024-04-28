@@ -1,4 +1,4 @@
---// Main Debug Version \\TODO FIX PATHS
+--// Main Debug Version \\ -- jobs bugged
 
 Debug = true
 function Debug(...)
@@ -15,7 +15,6 @@ local statusEvent = getgenv().ah_statusEvent;
 local CurrentThread = nil
 local CurrentLog = {}
 local GameName = "Mighty Omega"
-local AutoJobLink = "https://raw.githubusercontent.com/urmom1313/Aztup-Hub-V3/master/mighty%20jobber.lua"
 
 local Utility = {};
 
