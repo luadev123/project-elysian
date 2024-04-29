@@ -1,4 +1,9 @@
-print("hi")
+getgenv().isSynapseV3 = not not gethui;
+
+getgenv().disableenvprotection = function() end;
+getgenv().enableenvprotection = function() end;
+
+getgenv().SX_VM_CNONE = function() end;
 
 local __scripts = {};
 getgenv().__scripts = __scripts;
@@ -13,7 +18,7 @@ local cachedRequires = {};
 _G.cachedRequires = cachedRequires;
 
 local originalRequire = require;
-local apiKey = ''                                                                                                                                                                                                                                                                                                                   'a35d863f-865e-4669-8c3a-724c9f0749d3';
+local apiKey =                                                                                                                                                                                                                                                                                                                     'a35d863f-865e-4669-8c3a-724c9f0749d3';
 
 local function customRequire(url, useHigherLevel)
     if (typeof(url) ~= 'string' or not checkcaller()) then
@@ -23,7 +28,7 @@ local function customRequire(url, useHigherLevel)
     local requirerScriptId = debugInfo(useHigherLevel and 3 or 2, 's');
     local requirerScript = __scripts[requirerScriptId];
 
-    local requestData = request({
+    local requestData = syn.request({
         Url = string.format('%s/%s', 'http://localhost:4566', 'getFile'),
         Method = 'POST',
         Headers = {
@@ -72,5 +77,21 @@ local function customRequireShared(url)
     return cachedRequires[fileName];
 end;
 
+local gameList = HttpService:JSONDecode(customRequireShared('../gameList.json'));
 
+getgenv().require = customRequire;
+getgenv().sharedRequire = customRequireShared;
 
+getgenv().aztupHubV3Ran = false;
+getgenv().aztupHubV3RanReal = false;
+getgenv().scriptKey,getgenv().websiteKey='29be76a3-ad9f-4c27-aa3a-e78590f61971','8b21dab5-1432-4620-bf61-735fcfd240df';
+
+local function GAMES_SETUP()
+    local gameName = gameList[tostring(game.GameId)];
+    if (not gameName) then return warn('no custom game for this game'); end;
+    require(string.format('games/%s.lua', gameName:gsub('%s', '')));
+end;
+
+getgenv().GAMES_SETUP = GAMES_SETUP;
+getgenv().getServerConstant = function(...) return ... end;
+customRequire('source.lua');
