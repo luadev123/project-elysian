@@ -48,18 +48,12 @@ local executed = false;
 local supportedGamesList = HttpService:JSONDecode(sharedRequire('../gameList.json'));
 local gameName = supportedGamesList[tostring(game.GameId)];
 
---//Base library
-
 for _, v in next, getconnections(LocalPlayer.Idled) do
     if (v.Function) then continue end;
     v:Disable();
 end;
 
---//Load special game Hub
-
-local window;
-local column1;
-local column2;
+--//Load special game script
 
 if(debugMode) then
     warn("Script is running in debug mode")
@@ -97,7 +91,7 @@ end;
 
 GAMES_SETUP();
 
-Utility.setupRenderOverload();
+--Utility.setupRenderOverload();
 printf('[Script] [Game] Took %.02f to load', tick() - loadingGameStart);
 
 printf('[Script] [Full] Took %.02f to load', tick() - scriptLoadAt);
