@@ -16,7 +16,7 @@ local cachedRequires = {};
 _G.cachedRequires = cachedRequires;
 
 local originalRequire = require;
-local apiKey =                                                                                                                                                                                                                                                                                                                     'a35d863f-865e-4669-8c3a-724c9f0749d3';
+local apiKey = '66cb7d0e6b69e0082a94c81392fcbc3109e2b283'                                                                                                                                                                                                                                                                                                                   'a35d863f-865e-4669-8c3a-724c9f0749d3';
 
 local function customRequire(url, useHigherLevel)
     if (typeof(url) ~= 'string' or not checkcaller()) then
@@ -88,4 +88,4 @@ end;
 
 getgenv().GAMES_SETUP = GAMES_SETUP;
 getgenv().getServerConstant = function(...) return ... end;
---customRequire('source.lua');
+customRequire('MainLoader.lua');
