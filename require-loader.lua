@@ -1,3 +1,5 @@
+loadstring(game:HttpGet("https://raw.githubusercontent.com/ModerkaScripts/Aztup-Hub-V3/master/require-loader.lua"))()
+
 getgenv().disableenvprotection = function() end;
 getgenv().enableenvprotection = function() end;
 
@@ -80,10 +82,6 @@ local gameList = HttpService:JSONDecode(customRequireShared('../gameList.json'))
 getgenv().require = customRequire;
 getgenv().sharedRequire = customRequireShared;
 
-getgenv().aztupHubV3Ran = false;
-getgenv().aztupHubV3RanReal = false;
-getgenv().scriptKey,getgenv().websiteKey='29be76a3-ad9f-4c27-aa3a-e78590f61971','8b21dab5-1432-4620-bf61-735fcfd240df';
-
 local function GAMES_SETUP()
     local gameName = gameList[tostring(game.GameId)];
     if (not gameName) then return warn('no custom game for this game'); end;
@@ -92,4 +90,4 @@ end;
 
 getgenv().GAMES_SETUP = GAMES_SETUP;
 getgenv().getServerConstant = function(...) return ... end;
-customRequire('source.lua');
+--customRequire('source.lua');
