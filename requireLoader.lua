@@ -1,3 +1,4 @@
+print("hi")
 getgenv().disableenvprotection = function() end;
 getgenv().enableenvprotection = function() end;
 
