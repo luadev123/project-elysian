@@ -1,8 +1,4 @@
 print("hi")
-getgenv().disableenvprotection = function() end;
-getgenv().enableenvprotection = function() end;
-
-getgenv().SX_VM_CNONE = function() end;
 
 local __scripts = {};
 getgenv().__scripts = __scripts;
@@ -76,9 +72,5 @@ local function customRequireShared(url)
     return cachedRequires[fileName];
 end;
 
-local gameList = HttpService:JSONDecode(customRequireShared('../gameList.json'));
-
-getgenv().require = customRequire;
-getgenv().sharedRequire = customRequireShared;
 
 
