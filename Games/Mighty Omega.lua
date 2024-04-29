@@ -29,6 +29,9 @@ if (not game:IsLoaded()) then
 end;
 
 local LocalPlayer = game:GetService('Players').LocalPlayer;
+
+repeat task.wait() until LocalPlayer.Character;
+
 local sharedRequires = {};
 local gameId = game.GameId;
 local jobId, placeId = game.JobId, game.PlaceId;
