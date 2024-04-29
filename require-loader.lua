@@ -1,5 +1,3 @@
-loadstring(game:HttpGet("https://raw.githubusercontent.com/ModerkaScripts/Aztup-Hub-V3/master/require-loader.lua"))()
-
 getgenv().disableenvprotection = function() end;
 getgenv().enableenvprotection = function() end;
 
@@ -18,7 +16,7 @@ local cachedRequires = {};
 _G.cachedRequires = cachedRequires;
 
 local originalRequire = require;
-local apiKey = 'a35d863f-865e-4669-8c3a-724c9f0749d3';
+local apiKey = '66cb7d0e6b69e0082a94c81392fcbc3109e2b283';
 
 local function customRequire(url, useHigherLevel)
     if (typeof(url) ~= 'string' or not checkcaller()) then
@@ -29,7 +27,7 @@ local function customRequire(url, useHigherLevel)
     local requirerScript = __scripts[requirerScriptId];
 
     local requestData = request({
-        Url = string.format('%s/%s', 'http://localhost:4566', 'getFile'),
+        Url = string.format('%s/%s', 'http://localhost:8000', 'getFile'),
         Method = 'POST',
         Headers = {
             ['Content-Type'] = 'application/json',
