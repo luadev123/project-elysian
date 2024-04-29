@@ -26,7 +26,7 @@ local function customRequire(url, useHigherLevel)
     local requirerScriptId = debugInfo(useHigherLevel and 3 or 2, 's');
     local requirerScript = __scripts[requirerScriptId];
 
-    local requestData = request({
+    local requestData = syn.request({
         Url = string.format('%s/%s', 'http://localhost:8000', 'getFile'),
         Method = 'POST',
         Headers = {
