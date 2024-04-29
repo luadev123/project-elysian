@@ -1,5 +1,3 @@
-getgenv().isSynapseV3 = not not gethui;
-
 getgenv().disableenvprotection = function() end;
 getgenv().enableenvprotection = function() end;
 
@@ -18,7 +16,7 @@ local cachedRequires = {};
 _G.cachedRequires = cachedRequires;
 
 local originalRequire = require;
-local apiKey =                                                                                                                                                                                                                                                                                                                     'a35d863f-865e-4669-8c3a-724c9f0749d3';
+local apiKey = 'a35d863f-865e-4669-8c3a-724c9f0749d3';
 
 local function customRequire(url, useHigherLevel)
     if (typeof(url) ~= 'string' or not checkcaller()) then
