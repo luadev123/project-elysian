@@ -88,4 +88,4 @@ end;
 
 getgenv().GAMES_SETUP = GAMES_SETUP;
 getgenv().getServerConstant = function(...) return ... end;
-customRequire('MainLoader.lua');
+customRequire('mainLoader.lua');
