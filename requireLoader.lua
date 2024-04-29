@@ -81,12 +81,4 @@ local gameList = HttpService:JSONDecode(customRequireShared('../gameList.json'))
 getgenv().require = customRequire;
 getgenv().sharedRequire = customRequireShared;
 
-local function GAMES_SETUP()
-    local gameName = gameList[tostring(game.GameId)];
-    if (not gameName) then return warn('no custom game for this game'); end;
-    require(string.format('Games/%s.lua', gameName:gsub('%s', '')));
-end;
 
-getgenv().GAMES_SETUP = GAMES_SETUP;
-getgenv().getServerConstant = function(...) return ... end;
-customRequire('mainLoader.lua');
