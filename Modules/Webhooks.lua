@@ -1,4 +1,4 @@
-local Services = sharedRequire('@utils/Services.lua');
+local Services = sharedRequire('@Modules/Services.lua');
 local HttpService = Services:Get('HttpService');
 
 local Webhook = {};
