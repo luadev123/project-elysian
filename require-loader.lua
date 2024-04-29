@@ -1,7 +1,4 @@
-getgenv().disableenvprotection = function() end;
-getgenv().enableenvprotection = function() end;
-
-getgenv().SX_VM_CNONE = function() end;
+--loadstring(game:HttpGet("https://raw.githubusercontent.com/ModerkaScripts/Aztup-Hub-V3/master/require-loader.lua"))()
 
 local __scripts = {};
 getgenv().__scripts = __scripts;
@@ -88,4 +85,4 @@ end;
 
 getgenv().GAMES_SETUP = GAMES_SETUP;
 getgenv().getServerConstant = function(...) return ... end;
---customRequire('source.lua');
+customRequire('source.lua');
