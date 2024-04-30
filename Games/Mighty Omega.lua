@@ -909,6 +909,9 @@ local function MainThreadFn()
 						minStrikingPowerStamina = 5,
 						strikingPowerStamWait = 60,
 						fatigueKickPercent = 65,
+						autoUseFlow = false,
+						attachToBackRange = 100,
+						attachToBackDistance = 5,
 					}
 
 					local functions = {};
@@ -1017,7 +1020,7 @@ local function MainThreadFn()
 								local foundAnim = false;
 								for i,v in next, Character.Humanoid.Animator:GetPlayingAnimationTracks() do
 									local curId = v.Animation.AnimationId;
-									if curId == "rbxassetid://5087736730" or curId == "rbxassetid://4889489948" then
+									if curId == "rbxassetid://16715338319" or curId == "rbxassetid://16715339817" then
 										foundAnim = true;
 									end
 								end
@@ -1848,6 +1851,23 @@ local function MainThreadFn()
 							end
 							Character.Humanoid:UnequipTools();
 						end
+
+						function getMobInRange(range)
+							local inRange;
+							local closest = range;
+							for i,v in next, LivingThings:GetChildren() do
+								if v == Character then continue; end
+								if ffc(Players,v.Name) then continue; end
+								if not (ffc(v,"HumanoidRootPart")) or not ffc(Character,"HumanoidRootPart") then continue; end
+								if (v.HumanoidRootPart.Position-Character.HumanoidRootPart.Position).magnitude >= closest then continue; end
+								inRange = v;
+								closest = (v.HumanoidRootPart.Position-Character.HumanoidRootPart.Position).magnitude;
+								break;
+							end
+						
+							return inRange;
+						end
+						
 					end;
 
 
@@ -2202,98 +2222,99 @@ local function MainThreadFn()
 					
 						workspace.DescendantAdded:Connect(sfDescendantAdded);
 					end
-					
-					do -- // Egg Notifier/ESP
+					if workspace:FindFirstChild("Event") then
+						do -- // Egg Notifier/ESP
 
-						local function onEggAdded(egg)
-							if not egg then return end;
-							for i,v in pairs(egg:GetChildren()) do
-								if v:FindFirstChild("ClickDetector") and v:FindFirstChild("HumanoidRootPart") then
-									
-									local eggESP = Sense.AddInstance(v.HumanoidRootPart, {
-										enabled = true,
-										text = "{Anniversery Egg}", -- Placeholders: {name}, {distance}, {position}
-										textColor = { Color3.new(1,1,1), 1 },
-										textOutline = true,
-										textOutlineColor = Color3.new(),
-										textSize = 13,
-										textFont = 2,
-										limitDistance = false,
-										maxDistance = 150
-									})
-							
-									local connection;
-									connection = egg.AncestryChanged:Connect(function()
-										if egg:IsDescendantOf(game) then return; end
-							
-										eggESP:Destroy();
-										connection:Disconnect();
-									end);
-								else
-									if not egg.Cube then return end;
-									local eggESP = Sense.AddInstance(egg.Cube, {
-										enabled = true,
-										text = "{Anniversery Egg}", -- Placeholders: {name}, {distance}, {position}
-										textColor = { Color3.new(1,1,1), 1 },
-										textOutline = true,
-										textOutlineColor = Color3.new(),
-										textSize = 13,
-										textFont = 2,
-										limitDistance = false,
-										maxDistance = 150
-									})
-							
-									local connection;
-									connection = egg.AncestryChanged:Connect(function()
-										if egg:IsDescendantOf(game) then return; end
-							
-										eggESP:Destroy();
-										connection:Disconnect();
-									end);
-								end
-							end
-
-							
-						end
-					
-						local function EggDescended(instance)
-
-							if not instance then return; end
-					
-							local egg;
-					
-							while true do
-								egg = instance;
-								if egg then break; end
-								task.wait();
-							end
-					
-							onEggAdded(egg);
-					
-							if not librarySetting.eggNotifier then return; end
-					
-							Library:Notify("A egg has spawned!",4)
-
-							--if library.flags.webhookNotify then notifyWebhook("@everyone A Street Fighter has spawned: "..streetFighterName); end
-						end
-
-						RightGroupBox1:AddToggle("Egg Notifier", {
-							Text = "Egg Notifier",
-							Value = true, -- Default value (true / false)
-							Callback = function(Value)
-								librarySetting.eggNotifier = Value
-								if not Value then return; end
-
-								for i,v in pairs(game.Workspace.Event:GetChildren()) do
-									if v then
-										EggDescended(v)
+							local function onEggAdded(egg)
+								if not egg then return end;
+								for i,v in pairs(egg:GetChildren()) do
+									if v:FindFirstChild("ClickDetector") and v:FindFirstChild("HumanoidRootPart") then
+										
+										local eggESP = Sense.AddInstance(v.HumanoidRootPart, {
+											enabled = true,
+											text = "{Anniversery Egg}", -- Placeholders: {name}, {distance}, {position}
+											textColor = { Color3.new(1,1,1), 1 },
+											textOutline = true,
+											textOutlineColor = Color3.new(),
+											textSize = 13,
+											textFont = 2,
+											limitDistance = false,
+											maxDistance = 150
+										})
+								
+										local connection;
+										connection = egg.AncestryChanged:Connect(function()
+											if egg:IsDescendantOf(game) then return; end
+								
+											eggESP:Destroy();
+											connection:Disconnect();
+										end);
+									else
+										if not egg.Cube then return end;
+										local eggESP = Sense.AddInstance(egg.Cube, {
+											enabled = true,
+											text = "{Anniversery Egg}", -- Placeholders: {name}, {distance}, {position}
+											textColor = { Color3.new(1,1,1), 1 },
+											textOutline = true,
+											textOutlineColor = Color3.new(),
+											textSize = 13,
+											textFont = 2,
+											limitDistance = false,
+											maxDistance = 150
+										})
+								
+										local connection;
+										connection = egg.AncestryChanged:Connect(function()
+											if egg:IsDescendantOf(game) then return; end
+								
+											eggESP:Destroy();
+											connection:Disconnect();
+										end);
 									end
 								end
-
-							end,
-						})
-					
-						workspace.Event.DescendantAdded:Connect(EggDescended);
+	
+								
+							end
+						
+							local function EggDescended(instance)
+	
+								if not instance then return; end
+						
+								local egg;
+						
+								while true do
+									egg = instance;
+									if egg then break; end
+									task.wait();
+								end
+						
+								onEggAdded(egg);
+						
+								if not librarySetting.eggNotifier then return; end
+						
+								Library:Notify("A egg has spawned!",4)
+	
+								--if library.flags.webhookNotify then notifyWebhook("@everyone A Street Fighter has spawned: "..streetFighterName); end
+							end
+	
+							RightGroupBox1:AddToggle("Egg Notifier", {
+								Text = "Egg Notifier",
+								Value = true, -- Default value (true / false)
+								Callback = function(Value)
+									librarySetting.eggNotifier = Value
+									if not Value then return; end
+	
+									for i,v in pairs(game.Workspace.Event:GetChildren()) do
+										if v then
+											EggDescended(v)
+										end
+									end
+	
+								end,
+							})
+						
+							workspace.Event.DescendantAdded:Connect(EggDescended);
+						end
 					end
 
 					do -- // macro machine
@@ -2648,8 +2669,8 @@ local function MainThreadFn()
 							end,
 						})
 
-						Striking:AddToggle("Auto Strikingspeed", {
-							Text = "Auto Strikingspeed",
+						Striking:AddToggle("Auto Strikingspeed (SS)", {
+							Text = "Auto StrikingSpeed (SS)",
 							Value = true, -- Default value (true / false)
 							Callback = function(toggle)
 								-- shitcode (messy af)
@@ -2797,16 +2818,8 @@ local function MainThreadFn()
 
 							end,
 						})
-						Striking:AddToggle("Auto Walk", {
-							Text = "Auto Walk",
-							Value = false, -- Default value (true / false)
-							Callback = function(Value)
-								librarySetting.autoWalk = Value
-							end,
-						})
-
-						Striking:AddToggle("Auto Strikingpower", {
-							Text = "Auto Strikingpower",
+						Striking:AddToggle("Auto Strikingpower (SP)", {
+							Text = "Auto StrikingPower (SP)",
 							Value = true, -- Default value (true / false)
 							Callback = function(toggle)
 								if not toggle then gMaid.autoPunchMaid = nil; gMaid.tryM2 = nil; return; end
@@ -2840,8 +2853,11 @@ local function MainThreadFn()
 									if eating then repeat task.wait(); until (not eating) or (not librarySetting.autoPunch); end --If eating then task.wait till not
 							
 									if Stats.Stamina+1 >= 80 then
-										env.runPrompt();
+										--env.runPrompt();
 										repeat
+											if not Stats.isRunning then --To prevent loop from getting stuck
+												env.runPrompt();
+											end
 											task.wait();
 										until Stats.Stamina <= 80 or not librarySetting.autoPunch;
 									elseif Stats.Stamina < 60 then
@@ -2874,11 +2890,18 @@ local function MainThreadFn()
 								end)
 							end,
 						})
+						Striking:AddToggle("Auto Walk", {
+							Text = "Auto Walk (Risky)",
+							Value = false, -- Default value (true / false)
+							Callback = function(Value)
+								librarySetting.autoWalk = Value
+							end,
+						})
 
 						local autoRhythm;
 
 						autoRhythm = Striking:AddToggle("Auto Rhythm", {
-							Text = "Auto Rhythm (Dont use rn)",
+							Text = "Auto Rhythm",
 							Value = false, -- Default value (true / false)
 							Callback = function(toggle)
 								if not toggle then gMaid.autoRhythm = nil; return; end
@@ -2903,6 +2926,98 @@ local function MainThreadFn()
 							end,
 						})
 
+						Striking:AddToggle("Auto Flow", {
+							Text = "Auto Flow",
+							Value = false, -- Default value (true / false)
+							Callback = function(toggle)
+								librarySetting.autoUseFlow=toggle
+								if not toggle then gMaid.autoFlowToggle = nil; return; end
+								if not ffc(plrGUI,"FlowUI") then librarySetting.autoUseFlow=false; return; end
+							
+								gMaid.autoFlowToggle = plrGUI.FlowUI:GetPropertyChangedSignal("Enabled"):Connect(function()
+									if not plrGUI.FlowUI.Enabled then return; end
+							
+									VirtualInputManager:SendKeyEvent(true,"T",false,game);
+									task.wait(0.1);
+									VirtualInputManager:SendKeyEvent(false,"T",false,game);
+								end)
+							end,
+						})
+					end
+
+					do -- // Risky Tab
+						LeftGroupBox2:AddToggle("Infinite Stamina", {
+							Text = "Infinite Stamina",
+							Value = false, -- Default value (true / false)
+							Callback = function(Value)
+								librarySetting.infStamina = Value
+								InfStam(Value)
+								--InfDashStam(Value)
+							end,
+						})
+	
+						LeftGroupBox2:AddToggle("Infinite Dashes", {
+							Text = "Infinite Dashes",
+							Value = false, -- Default value (true / false)
+							Callback = function(Value)
+								librarySetting.infDashes = Value
+								InfDashes(Value)
+							end,
+						})
+
+						local angleOffSet = CFrame.Angles(math.rad(-90),0,0);
+						LeftGroupBox2:AddToggle("Attach to back (Mobs)", {
+							Text = "Attach to back (Mobs)",
+							Value = false, -- Default value (true / false)
+							Callback = function(toggle)
+								if not toggle then gMaid.attachToback = nil; return; end
+
+								local lastcheck = tick();
+								local target = getMobInRange(librarySetting.attachToBackRange);
+								gMaid.attachToback = RunService.Heartbeat:Connect(function()
+									if tick()-lastcheck >= 0.1 and target then
+										lastcheck = tick();
+							
+										if ffc(target,"KO") then return; end
+									end
+							
+									if not target or not target.Parent then
+										target = getMobInRange(librarySetting.attachToBackRange);
+									end
+									if not target or not ffc(target,"HumanoidRootPart") then return; end
+							
+									Character.HumanoidRootPart.CFrame = target.HumanoidRootPart.CFrame * (CFrame.new(0,librarySetting.attachToBackDistance,1)*angleOffSet);
+									Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero;
+									Character.HumanoidRootPart.AssemblyAngularVelocity = Vector3.zero;
+								end)
+							end,
+						})
+						LeftGroupBox2:AddSlider("Attach to Back Distance", {
+							Text = "Attach to Back Distance",
+							Default = 5,
+							Min = 1,
+							Max = 10,
+							Rounding = 0,
+							Compact = true,
+							Suffix = "",
+					
+							Callback = function(Value)
+								librarySetting.attachToBackDistance = Value
+							end,
+						})
+						LeftGroupBox2:AddSlider("Attach to Back Range", {
+							Text = "Attach to Back Range",
+							Default = 50,
+							Min = 1,
+							Max = 100,
+							Rounding = 0,
+							Compact = true,
+							Suffix = "",
+					
+							Callback = function(Value)
+								librarySetting.attachToBackRange = Value
+							end,
+						})
 					end
 
 					do -- // UI
@@ -2940,25 +3055,6 @@ local function MainThreadFn()
 					
 							Callback = function(Value)
 								librarySetting.runningSpeed = Value
-							end,
-						})
-	
-						LeftGroupBox2:AddToggle("Infinite Stamina", {
-							Text = "Infinite Stamina",
-							Value = false, -- Default value (true / false)
-							Callback = function(Value)
-								librarySetting.infStamina = Value
-								InfStam(Value)
-								InfDashStam(Value)
-							end,
-						})
-	
-						LeftGroupBox2:AddToggle("Infinite Dashes", {
-							Text = "Infinite Dashes",
-							Value = false, -- Default value (true / false)
-							Callback = function(Value)
-								librarySetting.infDashes = Value
-								InfDashes(Value)
 							end,
 						})
 	
