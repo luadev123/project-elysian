@@ -2877,8 +2877,8 @@ local function MainThreadFn()
 
 						local autoRhythm;
 
-						autoRhythm = Striking:AddToggle("Auto Rhythm (Dont use rn)", {
-							Text = "Auto Rhythm",
+						autoRhythm = Striking:AddToggle("Auto Rhythm", {
+							Text = "Auto Rhythm (Dont use rn)",
 							Value = false, -- Default value (true / false)
 							Callback = function(toggle)
 								if not toggle then gMaid.autoRhythm = nil; return; end
