@@ -29,9 +29,17 @@ if (not game:IsLoaded()) then
 end;
 
 local LocalPlayer = game:GetService('Players').LocalPlayer;
+repeat task.wait() until LocalPlayer.Character
+local Character = LocalPlayer.Character
 
-repeat task.wait() until LocalPlayer.Character;
+local isA = game.IsA;
+local ffc = game.FindFirstChild;
+local ffcwia = game.FindFirstChildWhichIsA;
+local kick = game.Players.LocalPlayer.Kick;
 
+repeat task.wait() until Character;
+repeat task.wait() until ffc(LocalPlayer,"Backpack");
+repeat task.wait() until ffc(LocalPlayer.Backpack,"LocalS");
 local sharedRequires = {};
 local gameId = game.GameId;
 local jobId, placeId = game.JobId, game.PlaceId;
@@ -41,7 +49,6 @@ local plrGUI = LocalPlayer.PlayerGui;
 local mouse = LocalPlayer:GetMouse()
 local camera = workspace.CurrentCamera;
 local Sense = loadstring(game:HttpGet('https://sirius.menu/sense'))()
-local Character = LocalPlayer.Character
 local HWID = gethwid()
 local getFpsCap = getfpscap()
 local Pass = false
@@ -69,15 +76,6 @@ local Stats = game:GetService("Stats")
 local NetworkClient = game:GetService("NetworkClient")
 local GuiService = game:GetService("GuiService")
 local PathfindingService = game:GetService("PathfindingService")
-
-local isA = game.IsA;
-local ffc = game.FindFirstChild;
-local ffcwia = game.FindFirstChildWhichIsA;
-local kick = game.Players.LocalPlayer.Kick;
-
-repeat task.wait() until Character;
-repeat task.wait() until ffc(LocalPlayer,"Backpack");
-repeat task.wait() until ffc(LocalPlayer.Backpack,"LocalS");
 
 local banRemote;
 local remoteKey;
@@ -907,6 +905,10 @@ local function MainThreadFn()
 						maxTrainingStam = 100,
 						autoStrikespeed = true,
 						autoWalk = false,
+						useM2 = true,
+						minStrikingPowerStamina = 5,
+						strikingPowerStamWait = 60,
+						fatigueKickPercent = 65,
 					}
 
 					local functions = {};
@@ -1920,8 +1922,10 @@ local function MainThreadFn()
 					local LeftGroupBox1 = Tab1:AddLeftGroupbox("Player")
 					local LeftGroupBox2 = Tab1:AddLeftGroupbox("Risky")
 					local RightGroupBox1 = Tab1:AddRightGroupbox("Misc")
+					local AutoEatTab = Tab1:AddRightGroupbox("Auto Eat")
 					local FarmGroupBox1 = Tab1:AddLeftGroupbox("Autofarms")
 					local Trainings = Tab1:AddLeftGroupbox("Trainings")
+					local Striking = Tab1:AddRightGroupbox("Striking Speed/Power")
                     local StatV = Tab1:AddRightGroupbox("Stat Viewer")
                     local oldSpeed; --This function can get detected technically
 					local env = getsenv(LocalPlayer.Backpack.LocalS)
@@ -2202,7 +2206,7 @@ local function MainThreadFn()
 					do -- // Egg Notifier/ESP
 
 						local function onEggAdded(egg)
-
+							if not egg then return end;
 							for i,v in pairs(egg:GetChildren()) do
 								if v:FindFirstChild("ClickDetector") and v:FindFirstChild("HumanoidRootPart") then
 									
@@ -2226,6 +2230,7 @@ local function MainThreadFn()
 										connection:Disconnect();
 									end);
 								else
+									if not egg.Cube then return end;
 									local eggESP = Sense.AddInstance(egg.Cube, {
 										enabled = true,
 										text = "{Anniversery Egg}", -- Placeholders: {name}, {distance}, {position}
@@ -2643,7 +2648,7 @@ local function MainThreadFn()
 							end,
 						})
 
-						Trainings:AddToggle("Auto Strikingspeed", {
+						Striking:AddToggle("Auto Strikingspeed", {
 							Text = "Auto Strikingspeed",
 							Value = true, -- Default value (true / false)
 							Callback = function(toggle)
@@ -2792,12 +2797,109 @@ local function MainThreadFn()
 
 							end,
 						})
-
-						Trainings:AddToggle("Auto Walk", {
+						Striking:AddToggle("Auto Walk", {
 							Text = "Auto Walk",
 							Value = false, -- Default value (true / false)
 							Callback = function(Value)
 								librarySetting.autoWalk = Value
+							end,
+						})
+
+						Striking:AddToggle("Auto Strikingpower", {
+							Text = "Auto Strikingpower",
+							Value = true, -- Default value (true / false)
+							Callback = function(toggle)
+								if not toggle then gMaid.autoPunchMaid = nil; gMaid.tryM2 = nil; return; end
+
+								local autoPunchDeb = false;
+								local shouldM2 = false;
+								local fightTool = getStyle();
+								if not fightTool then return; end
+							
+								local givenTask;
+								gMaid.tryM2 = Character.ChildAdded:Connect(function(v)
+									if v.Name ~= "Attacking" then return; end
+							
+									if v.Value == 4 then
+										givenTask = task.spawn(function() shouldM2 = true; task.wait(2); shouldM2 = false; end)
+									elseif v.Value == 5 then
+										shouldM2 = false;
+										if givenTask then
+											task.cancel(givenTask);
+										end
+									end
+								end)
+							
+								gMaid.autoPunchMaid = RunService.Stepped:Connect(function()
+									if autoPunchDeb then return; end
+									if eating or Stats.isKnocked or not fightTool then return; end
+							
+									autoPunchDeb = true;
+							
+									if fightTool.Parent ~= Character then Character.Humanoid:UnequipTools(); fightTool.Parent = Character; end --If the fightTool parent isnt char then give it to char
+									if eating then repeat task.wait(); until (not eating) or (not librarySetting.autoPunch); end --If eating then task.wait till not
+							
+									if Stats.Stamina+1 >= 80 then
+										env.runPrompt();
+										repeat
+											task.wait();
+										until Stats.Stamina <= 80 or not librarySetting.autoPunch;
+									elseif Stats.Stamina < 60 then
+										if Stats.Stamina <= 5 then
+											repeat 
+												task.wait();
+											until Stats.Stamina >= 60
+										else
+											env.stopSprint();
+											repeat task.wait() until Stats.Stamina >= 60 or not librarySetting.autoPunch;
+										end
+									end
+
+								
+							
+									if shouldM2 and librarySetting.useM2 then
+										if 80 > Stats.Stamina then
+											local key = getKey(LocalPlayer.Backpack.LocalS);
+											if not key then autoPunchDeb = false; return; end
+								
+											LocalPlayer.Backpack.Action:FireServer(key,"GuardBreak",true);
+										end
+									else
+										if 80 > Stats.Stamina then
+											fightTool:Activate();
+										end
+									end
+							
+									autoPunchDeb = false;
+								end)
+							end,
+						})
+
+						local autoRhythm;
+
+						autoRhythm = Striking:AddToggle("Auto Rhythm (Dont use rn)", {
+							Text = "Auto Rhythm",
+							Value = false, -- Default value (true / false)
+							Callback = function(toggle)
+								if not toggle then gMaid.autoRhythm = nil; return; end
+						
+								local lastRhythmLoop = tick();
+								local fightTool = getStyle();
+								gMaid.autoRhythm = RunService.Stepped:Connect(function()
+									if not (tick() - lastRhythmLoop >= 0.2) then return; end
+							
+									lastRhythmLoop = tick();
+							
+									if Character.HumanoidRootPart.RhythmUI.Enabled then return; end
+									if fightTool and fightTool.Parent ~= Character then return; end
+									if Stats.Rhythm >= 100 then return; end
+									if Stats.isEating then return; end
+									if Stats.isRunning then return; end
+							
+									VirtualInputManager:SendKeyEvent(true,"R",false,game);
+									task.wait(0.1);
+									VirtualInputManager:SendKeyEvent(false,"R",false,game);
+								end)
 							end,
 						})
 
@@ -2915,7 +3017,7 @@ local function MainThreadFn()
 							Sense.teamSettings.enemy.distanceColor[1] = Value
 						end})
 
-						RightGroupBox1:AddToggle("AutoEat", {
+						AutoEatTab:AddToggle("AutoEat", {
 							Text = "Auto Eat",
 							Value = true, -- Default value (true / false)
 							Callback = function(Value)
@@ -2936,7 +3038,7 @@ local function MainThreadFn()
 
 							end,
 						})
-						RightGroupBox1:AddSlider("AutoEatAt", {
+						AutoEatTab:AddSlider("AutoEatAt", {
 							Text = "Auto Eat At %",
 							Default = 25,
 							Min = 1,
@@ -2949,7 +3051,7 @@ local function MainThreadFn()
 								librarySetting["autoEatAt%"] = Value
 							end,
 						}) -- ["eatTo%"]
-						RightGroupBox1:AddSlider("AutoEatTo", {
+						AutoEatTab:AddSlider("AutoEatTo", {
 							Text = "Auto Eat To %",
 							Default = 25,
 							Min = 1,
@@ -2983,6 +3085,37 @@ local function MainThreadFn()
 						RightGroupBox1:AddButton("Suicide", function()
 							Character:BreakJoints()
 						end)			
+
+						RightGroupBox1:AddToggle("Fatigue Autokick", {
+							Text = "Fatigue Autokick",
+							Value = true, -- Default value (true / false)
+							Callback = function(Value)
+
+								gMaid.FatigueAutokick = RunService.Stepped:Connect(function()
+									if not Value then return; end
+
+									if Stats.Fatigue >= librarySetting.fatigueKickPercent then
+										LocalPlayer:Kick("Fatigue limit reached:".." "..librarySetting.fatigueKickPercent)
+									end
+
+								end)
+
+							end,
+						})
+
+						RightGroupBox1:AddSlider("Fatigue %", {
+							Text = "Fatigue %",
+							Default = 65,
+							Min = 1,
+							Max = 100,
+							Rounding = 0,
+							Compact = false,
+							Suffix = "%",
+					
+							Callback = function(Value)
+								librarySetting.fatigueKickPercent = Value
+							end,
+						}) 
 
 						FarmGroupBox1:AddButton("Auto Job (WIP)", function()
 							while true do
