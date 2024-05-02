@@ -3017,7 +3017,7 @@ local function MainThreadFn()
 										Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero;
 										Character.HumanoidRootPart.AssemblyAngularVelocity = Vector3.zero;
 									end)
-								elseif libraryetting.attachToBackMode == "Behind" then
+								elseif librarySetting.attachToBackMode == "Behind" then
 									gMaid.attachToback = RunService.Heartbeat:Connect(function()
 										if tick()-lastcheck >= 0.1 and target then
 											lastcheck = tick();
@@ -3029,8 +3029,9 @@ local function MainThreadFn()
 											target = getMobInRange(librarySetting.attachToBackRange);
 										end
 										if not target or not ffc(target,"HumanoidRootPart") then return; end
-								
+								        --Character.HumanoidRootPart.CFrame = CFrame.lookAt(Character.HumanoidRootPart.Position, target.HumanoidRootPart.Position)
 										Character.HumanoidRootPart.CFrame = target.HumanoidRootPart.CFrame * (CFrame.new(-librarySetting.attachToBackDistance,0,1)*angleOffSet);
+										Character.HumanoidRootPart.CFrame = CFrame.lookAt(Character.HumanoidRootPart.Position,target.HumanoidRootPart.Position)
 										Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero;
 										Character.HumanoidRootPart.AssemblyAngularVelocity = Vector3.zero;
 									end)
@@ -3238,12 +3239,23 @@ local function MainThreadFn()
 							TeleportService:TeleportToPlaceInstance(4878988249,id,plr);
 						end)
 
-						RightGroupBox1:AddButton("Teleport Private Server", function()
+						RightGroupBox1:AddButton("Teleport Tourney of 100", function()
 							TeleportService:Teleport(6320657368);
 						end)
-						RightGroupBox1:AddButton("Teleport Tourney of 100", function()
+						RightGroupBox1:AddButton("Teleport Private Server", function()
 							TeleportService:Teleport(6745592527);
 						end)
+
+						RightGroupBox1:AddToggle("Anti Afk", {
+							Text = "Anti Afk",
+							Value = true, -- Default value (true / false)
+							Callback = function(Value)
+								while Value do
+									VirtualInputManager:SendMouseButtonEvent(1,1,0,true,game,0);
+									task.wait(1140)
+								end
+							end,
+						})
 
 						RightGroupBox1:AddButton("Suicide", function()
 							Character:BreakJoints()
