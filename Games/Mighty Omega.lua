@@ -3238,6 +3238,13 @@ local function MainThreadFn()
 							TeleportService:TeleportToPlaceInstance(4878988249,id,plr);
 						end)
 
+						RightGroupBox1:AddButton("Teleport Private Server", function()
+							TeleportService:Teleport(6320657368);
+						end)
+						RightGroupBox1:AddButton("Teleport Tourney of 100", function()
+							TeleportService:Teleport(6745592527);
+						end)
+
 						RightGroupBox1:AddButton("Suicide", function()
 							Character:BreakJoints()
 						end)			
