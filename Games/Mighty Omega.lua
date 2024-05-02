@@ -1,4 +1,3 @@
-
 --// Main Debug Version \\ -- jobs bugged
 
 Debug = true
@@ -907,12 +906,14 @@ local function MainThreadFn()
 						autoStrikespeed = true,
 						autoWalk = false,
 						useM2 = true,
-						minStrikingPowerStamina = 5,
-						strikingPowerStamWait = 60,
+						["staminaWait%"] = 99,
+						["minStamina%"] = 0,
+						strikingPowerDelay = 0.1,
 						fatigueKickPercent = 65,
 						autoUseFlow = false,
 						attachToBackRange = 100,
 						attachToBackDistance = 5,
+						attachToBackMode = "Above",
 					}
 
 					local functions = {};
@@ -2823,6 +2824,7 @@ local function MainThreadFn()
 							Text = "Auto StrikingPower (SP)",
 							Value = true, -- Default value (true / false)
 							Callback = function(toggle)
+								librarySetting.autoPunch = toggle
 								if not toggle then gMaid.autoPunchMaid = nil; gMaid.tryM2 = nil; return; end
 
 								local autoPunchDeb = false;
@@ -2853,42 +2855,63 @@ local function MainThreadFn()
 									if fightTool.Parent ~= Character then Character.Humanoid:UnequipTools(); fightTool.Parent = Character; end --If the fightTool parent isnt char then give it to char
 									if eating then repeat task.wait(); until (not eating) or (not librarySetting.autoPunch); end --If eating then task.wait till not
 							
-									if Stats.Stamina+1 >= 80 then
+									if (Stats.Stamina+1 >= 80) or Stats.Stamina <= librarySetting["minStamina%"] then
 										--env.runPrompt();
 										repeat
 											if not Stats.isRunning then --To prevent loop from getting stuck
 												env.runPrompt();
 											end
-											task.wait();
-										until Stats.Stamina <= 80 or not librarySetting.autoPunch;
-									elseif Stats.Stamina < 60 then
-										if Stats.Stamina <= 5 then
-											repeat 
-												task.wait();
-											until Stats.Stamina >= 60
-										else
-											env.stopSprint();
-											repeat task.wait() until Stats.Stamina >= 60 or not librarySetting.autoPunch;
-										end
+											task.wait(0.2);
+										until Stats.Stamina <= librarySetting["minStamina%"] or not librarySetting.autoPunch;
+							
+										env.stopSprint();
+										repeat task.wait() until Stats.Stamina >= librarySetting["staminaWait%"] or not librarySetting.autoPunch;
 									end
-
-								
 							
 									if shouldM2 and librarySetting.useM2 then
-										if 80 > Stats.Stamina then
-											local key = getKey(LocalPlayer.Backpack.LocalS);
-											if not key then autoPunchDeb = false; return; end
-								
-											LocalPlayer.Backpack.Action:FireServer(key,"GuardBreak",true);
-										end
+										local key = getKey(LocalPlayer.Backpack.LocalS);
+										if not key then autoPunchDeb = false; return; end
+							
+										LocalPlayer.Backpack.Action:FireServer(key,"GuardBreak",true);
 									else
-										if 80 > Stats.Stamina then
-											fightTool:Activate();
-										end
+										fightTool:Activate();
 									end
 							
 									autoPunchDeb = false;
 								end)
+							end,
+						})
+						Striking:AddToggle("useM2", {
+							Text = "Use Critical",
+							Value = true, -- Default value (true / false)
+							Callback = function(toggle)
+								librarySetting.useM2 = toggle
+							end,
+						})
+						Striking:AddSlider("StrikingPower Stamina Wait%", {
+							Text = "Stamina Wait %",
+							Default = 99,
+							Min = 1,
+							Max = 100,
+							Rounding = 0,
+							Compact = true,
+							Suffix = "",
+					
+							Callback = function(Value)
+								librarySetting["staminaWait%"] = Value
+							end,
+						})
+						Striking:AddSlider("Striking Power Minimum Stamina %", {
+							Text = "Min Stamina %",
+							Default = 1,
+							Min = 1,
+							Max = 100,
+							Rounding = 0,
+							Compact = true,
+							Suffix = "",
+					
+							Callback = function(Value)
+								librarySetting["minStamina%"] = Value
 							end,
 						})
 						Striking:AddToggle("Auto Walk", {
@@ -2905,6 +2928,7 @@ local function MainThreadFn()
 							Text = "Auto Rhythm",
 							Value = false, -- Default value (true / false)
 							Callback = function(toggle)
+								autoRhythm = toggle
 								if not toggle then gMaid.autoRhythm = nil; return; end
 						
 								local lastRhythmLoop = tick();
@@ -2975,22 +2999,57 @@ local function MainThreadFn()
 
 								local lastcheck = tick();
 								local target = getMobInRange(librarySetting.attachToBackRange);
-								gMaid.attachToback = RunService.Heartbeat:Connect(function()
-									if tick()-lastcheck >= 0.1 and target then
-										lastcheck = tick();
-							
-										if ffc(target,"KO") then return; end
-									end
-							
-									if not target or not target.Parent then
-										target = getMobInRange(librarySetting.attachToBackRange);
-									end
-									if not target or not ffc(target,"HumanoidRootPart") then return; end
-							
-									Character.HumanoidRootPart.CFrame = target.HumanoidRootPart.CFrame * (CFrame.new(0,librarySetting.attachToBackDistance,1)*angleOffSet);
-									Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero;
-									Character.HumanoidRootPart.AssemblyAngularVelocity = Vector3.zero;
-								end)
+
+								if librarySetting.attachToBackMode == "Above" then
+									gMaid.attachToback = RunService.Heartbeat:Connect(function()
+										if tick()-lastcheck >= 0.1 and target then
+											lastcheck = tick();
+								
+											if ffc(target,"KO") then return; end
+										end
+								
+										if not target or not target.Parent then
+											target = getMobInRange(librarySetting.attachToBackRange);
+										end
+										if not target or not ffc(target,"HumanoidRootPart") then return; end
+								
+										Character.HumanoidRootPart.CFrame = target.HumanoidRootPart.CFrame * (CFrame.new(0,librarySetting.attachToBackDistance,1)*angleOffSet);
+										Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero;
+										Character.HumanoidRootPart.AssemblyAngularVelocity = Vector3.zero;
+									end)
+								elseif libraryetting.attachToBackMode == "Behind" then
+									gMaid.attachToback = RunService.Heartbeat:Connect(function()
+										if tick()-lastcheck >= 0.1 and target then
+											lastcheck = tick();
+								
+											if ffc(target,"KO") then return; end
+										end
+								
+										if not target or not target.Parent then
+											target = getMobInRange(librarySetting.attachToBackRange);
+										end
+										if not target or not ffc(target,"HumanoidRootPart") then return; end
+								
+										Character.HumanoidRootPart.CFrame = target.HumanoidRootPart.CFrame * (CFrame.new(-librarySetting.attachToBackDistance,0,1)*angleOffSet);
+										Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero;
+										Character.HumanoidRootPart.AssemblyAngularVelocity = Vector3.zero;
+									end)
+								end
+
+								
+							end,
+						})
+						LeftGroupBox2:AddDropdown("Attach to Back Mode", {
+							Values = { "Above", "Behind"},
+					
+							Default = 1, -- number index of the value / string
+							Multi = false, -- true / false, allows multiple choices to be selected
+							AllowNull = false,
+							Default = "Above",
+							Text = "Attach to Back Mode",
+					
+							Callback = function(Value)
+								librarySetting.attachToBackMode = Value
 							end,
 						})
 						LeftGroupBox2:AddSlider("Attach to Back Distance", {
