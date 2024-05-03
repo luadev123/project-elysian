@@ -3324,7 +3324,7 @@ local function MainThreadFn()
 
 							end,
 						})
-						FarmGroupBox1:AddToggle("Trials Of 100 Farm", {
+						FarmGroupBox1:AddToggle("Trials Farm", {
 							Text = "Trials Farm",
 							Value = true, -- Default value (true / false)
 							Callback = function(Value)
