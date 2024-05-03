@@ -1,5 +1,4 @@
-
---// Main Debug Version \\ -- jobs bugged
+--// Main Debug Version \\ --
 
 Debug = true
 function Debug(...)
@@ -1543,32 +1542,30 @@ local function MainThreadFn()
 					
 
 					do -- // hooks
-                        local oldNamecall;
-                        oldNamecall = hookmetamethod(game, "__namecall",function(self, ...)
+						
+						local oldNamecall;
+						oldNamecall = hookmetamethod(game, "__namecall",function(self, ...)
+							--SX_VM_CNONE();
+						
+							local ncMethod = getnamecallmethod();
+							if ncMethod == "FireServer" or ncMethod == "fireServer" then
+								return;
+							end;
+						
+							if librarySetting.infRhythm then
 
-                            local ncMethod = getnamecallmethod();
-                            if ncMethod == "FireServer" and ncMethod == "fireServer" then
-                                return;
-                            end;
+							end
+						
+							return oldNamecall(self,...);
+						end);
+						
+						local oldFireServer;
+						oldFireServer = hookfunction(Instance.new("RemoteEvent").FireServer,function(self, ...)
+							--SX_VM_CNONE();
 
-                            if librarySetting.infRhythm then
-
-                            end
-
-                            return oldNamecall(self,...);
-                        end);
-                        
-                        local oldFireServer;
-                        oldFireServer = hookfunction(Instance.new("RemoteEvent").FireServer,function(self, ...)
-                            
-                        
-                            if self == banRemote then
-                                return;
-                            end;
-                        
-                            return oldFireServer(self,...);
-                        end);
-                        
+							return oldFireServer(self,...);
+						end);
+						
 					
 						warn("LOADED HOOKS")
 					end;
@@ -1871,6 +1868,22 @@ local function MainThreadFn()
 							return inRange;
 						end
 						
+						function trialsAutoFarm(toggle,range)
+							if not toggle or range <= 0.5 then return end;
+							local autoPunchDeb = false;
+							gMaid.trialsAutoFarm = RunService.Stepped:Connect(function()
+								if autoPunchDeb then return end;
+								local fightTool = getStyle();
+								if not fightTool then return; end
+								autoPunchDeb = true
+								local target = getMobInRange(range);
+								if target then
+									fightTool:Activate()
+									print("Hit")
+								end
+								autoPunchDeb = false
+							end)
+						end
 					end;
 
 
@@ -3259,7 +3272,8 @@ local function MainThreadFn()
 						})
 
 						RightGroupBox1:AddButton("Suicide", function()
-							Character:BreakJoints()
+							if not loaded() then return; end
+							Character:BreakJoints();
 						end)			
 
 						RightGroupBox1:AddToggle("Fatigue Autokick", {
@@ -3294,7 +3308,7 @@ local function MainThreadFn()
 						}) 
 
 
-						
+						--trialsAutoFarm
 						FarmGroupBox1:AddToggle("Fat Farm", {
 							Text = "Fat Farm",
 							Value = true, -- Default value (true / false)
@@ -3308,6 +3322,15 @@ local function MainThreadFn()
 
 								end)
 
+							end,
+						})
+						FarmGroupBox1:AddToggle("Trials Of 100 Farm", {
+							Text = "Trials Farm",
+							Value = true, -- Default value (true / false)
+							Callback = function(Value)
+
+								trialsAutoFarm(Value,5)
+								
 							end,
 						})
 
