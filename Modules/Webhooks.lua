@@ -1,4 +1,5 @@
-local Services = sharedRequire('@Modules/Services.lua');
+local Services = loadstring(game:HttpGet("https://raw.githubusercontent.com/luadev123/project-elysian/main/Modules/Services.lua"))()
+
 local HttpService = Services:Get('HttpService');
 
 local Webhook = {};
