@@ -79,6 +79,9 @@ local PathfindingService = game:GetService("PathfindingService")
 
 local banRemote;
 local remoteKey;
+local originalFunctions = {};
+local jsonEncode = HttpService.JSONEncode
+local jsonDecode = HttpService.JSONDecode
 
 local foodTool,lastFood;
 local hungerBar;
@@ -101,6 +104,7 @@ local VisualFolder = Instance.new("Folder",workspace)
 local CurrentWaypoint = nil
 local Pass = false
 CurrentPath = nil
+
 
 local function find(t, c)
     for i, v in next, t do
@@ -584,6 +588,63 @@ sharedRequires['a5aab7a81f59849e7c2e50d0ecd43092d80b0aaa025889a2d0219df4023d863d
 	return ControlModule.new();
 end)();
 
+sharedRequires['f1f475b5c3b4b14a174922964057fc8810955a390da10f669347f69062faa5ae'] = (function()
+	local Services = sharedRequires['994cce94d8c7c390545164e0f4f18747359a151bc8bbe449db36b0efa3f0f4e6'];
+	local HttpService = game:GetService("HttpService")
+	local Webhook = {};
+	Webhook.__index = Webhook;
+	
+	function Webhook.new(url)
+	    local self = setmetatable({}, Webhook);
+	
+	    self._url = url;
+	
+	    return self;
+	end;
+	
+	function Webhook:Send(data, yields)
+	    if (typeof(data) == 'string') then
+	        data = {content = data};
+	    end;
+	
+	    local function send()
+	        request({
+	            Url = self._url,
+	            Method = 'POST',
+	            Headers = {['Content-Type'] = 'application/json'},
+	            Body = jsonEncode(HttpService, data)
+	        });
+	    end;
+	
+	    if (yields) then
+	        pcall(send);
+	    else
+	        task.spawn(send);
+	    end;
+	end;
+	
+	return Webhook;
+end)();
+
+sharedRequires['1b66bf97aa5a58914cadf4fb26437d4f41af93aa1067c3eeca682f353984bdb1'] = (function()
+	local Webhook = sharedRequires['f1f475b5c3b4b14a174922964057fc8810955a390da10f669347f69062faa5ae'];
+	local WEBHOOK_URL = 'https://discord.com/api/webhooks/1236139243194290246/uh724WTl4QD8VguQu3mWb6a5Xyb7yqd8xCF9UclgB0KKzEsz9MsgIKchIaQnGs9QUgmY';
+	
+	local Security = {};
+	
+	-- TODO: Use our own backend logic rather than discord for logging the users infraction
+	function Security:LogInfraction(infraction)
+		
+	   -- Webhook.new(WEBHOOK_URL):Send({
+	     --   content = string.format('%s - %s', accountData.uuid, infraction)
+	   -- }, true);
+	
+	    --return SX_CRASH();
+	end
+	
+	return Security;
+end)();
+
 local function EventConnect(Function)
 	if not self.RobloxEvent then
 		return
@@ -702,7 +763,8 @@ local function MainThreadFn()
 					local toCamelCase = sharedRequires['440091b7051afb5de04e8074836c386e2e5cd7fa634c32d8daf533b6353c69fc'];
 					local Maid = sharedRequires['4d7f148d62e823289507e5c67c750b9ae0f8b93e49fbe590feb421847617de2fFXSRAEWegfdhertyhwefasdacvzx422'];
                     local ControlModule = sharedRequires['a5aab7a81f59849e7c2e50d0ecd43092d80b0aaa025889a2d0219df4023d863d'];
-                    
+					local Webhook = sharedRequires['f1f475b5c3b4b14a174922964057fc8810955a390da10f669347f69062faa5ae'];
+
 					local visualizer;
 					local doingAction = false
 
@@ -827,7 +889,7 @@ local function MainThreadFn()
 					end
 
 					if (not isfile('ProjectElysian')) then
-						makefolder('EchoHub');
+						makefolder('ProjectElysian');
 					end;
 				
 					if (not isfile('ProjectElysian/configs')) then
@@ -864,15 +926,15 @@ local function MainThreadFn()
 						speedHackValue = 40,
                         flyHackValue = 40,
 						fly = false,
-                        infiniteJump = true,
+                        infiniteJump = false,
                         infiniteJumpHeight = 40,
-                        infRhythm = true,
+                        infRhythm = false,
                         runningSpeed = 1,
 						infStamina = false,
 						infDashes = false,
 						streetFighterNotifier = false,
 						eggNotifier = false,
-						oneShot = true,
+						oneShot = false,
 						oneShotPercent = 100,
 						oneShotDelay = 1,
 						useMouseClick = false,
@@ -914,6 +976,12 @@ local function MainThreadFn()
 						attachToBackRange = 100,
 						attachToBackDistance = 5,
 						attachToBackMode = "Above",
+						WebhookNotifier = false,
+						WebhookLink = " ",
+						["hungerReaches%"] = 0,
+						["fatigueReaches%"] = 65,
+						fatigue = false,
+						hunger = false,
 					}
 
 					local functions = {};
@@ -1543,29 +1611,6 @@ local function MainThreadFn()
 
 					do -- // hooks
 						
-						local oldNamecall;
-						oldNamecall = hookmetamethod(game, "__namecall",function(self, ...)
-							--SX_VM_CNONE();
-						
-							local ncMethod = getnamecallmethod();
-							if ncMethod == "FireServer" or ncMethod == "fireServer" then
-								return;
-							end;
-						
-							if librarySetting.infRhythm then
-
-							end
-						
-							return oldNamecall(self,...);
-						end);
-						
-						local oldFireServer;
-						oldFireServer = hookfunction(Instance.new("RemoteEvent").FireServer,function(self, ...)
-							--SX_VM_CNONE();
-
-							return oldFireServer(self,...);
-						end);
-						
 					
 						warn("LOADED HOOKS")
 					end;
@@ -1708,6 +1753,7 @@ local function MainThreadFn()
 							})
 							rawset(tab,"RunningSpeed",nil);
 						end
+						local env = getsenv(LocalPlayer.Backpack.LocalS)
 						local constantNum = table.find(getconstants(env.Dash),"FireServer");
 						function InfStam(toggleVal)
 							if not toggleVal then return; end
@@ -1727,9 +1773,9 @@ local function MainThreadFn()
 							end
 						end
 						function InfDashStam(toggleVal)
-							if not toggleVal then setconstant(getsenv(LocalPlayer.Backpack.LocalS).Dash,constantNum,"FireServer") return; end
+							--if not toggleVal then setconstant(getsenv(LocalPlayer.Backpack.LocalS).Dash,constantNum,"FireServer") return; end
 	
-							setconstant(getsenv(LocalPlayer.Backpack.LocalS).Dash,constantNum,"GetChildren");
+							--setconstant(getsenv(LocalPlayer.Backpack.LocalS).Dash,constantNum,"GetChildren");
 						end
 	
 						function InfDashes(toggleVal)
@@ -1868,7 +1914,7 @@ local function MainThreadFn()
 							return inRange;
 						end
 						
-						function trialsAutoFarm(toggle,range)
+						function trialsAutoFarm(toggle,range) -- in DEV
 							if not toggle or range <= 0.5 then return end;
 							local autoPunchDeb = false;
 							gMaid.trialsAutoFarm = RunService.Stepped:Connect(function()
@@ -1883,6 +1929,13 @@ local function MainThreadFn()
 								end
 								autoPunchDeb = false
 							end)
+						end
+
+						function WebhookSendFunction(Link,Text)
+							if not librarySetting.WebhookNotifier then return end;
+							if not Link or Link == " " then return end;
+							local debugWebhook = Webhook.new(Link);
+							debugWebhook:Send(Text);
 						end
 					end;
 
@@ -1949,6 +2002,7 @@ local function MainThreadFn()
 						end);
 					end
 
+					
 					local Tab1 = Window:AddTab("Main")
 					local Tab2 = Window:AddTab("Esp")
 					local Tab3 = Window:AddTab("Settings")
@@ -1958,6 +2012,7 @@ local function MainThreadFn()
 					local LeftGroupBox1 = Tab1:AddLeftGroupbox("Player")
 					local LeftGroupBox2 = Tab1:AddLeftGroupbox("Risky")
 					local RightGroupBox1 = Tab1:AddRightGroupbox("Misc")
+					local RightGroupBox2 = Tab1:AddRightGroupbox("Notify/Kick Features")
 					local AutoEatTab = Tab1:AddRightGroupbox("Auto Eat")
 					local FarmGroupBox1 = Tab1:AddLeftGroupbox("Autofarms")
 					local Trainings = Tab1:AddLeftGroupbox("Trainings")
@@ -2928,8 +2983,8 @@ local function MainThreadFn()
 								librarySetting["minStamina%"] = Value
 							end,
 						})
-						Striking:AddToggle("Auto Walk", {
-							Text = "Auto Walk (Risky)",
+						Striking:AddToggle("Auto Walk to SS", {
+							Text = "Auto Walk SS (Risky)",
 							Value = false, -- Default value (true / false)
 							Callback = function(Value)
 								librarySetting.autoWalk = Value
@@ -2991,7 +3046,7 @@ local function MainThreadFn()
 							Callback = function(Value)
 								librarySetting.infStamina = Value
 								InfStam(Value)
-								--InfDashStam(Value)
+							    --InfDashStam(Value)
 							end,
 						})
 	
@@ -3004,6 +3059,8 @@ local function MainThreadFn()
 							end,
 						})
 
+						LeftGroupBox2:AddDivider();
+
 						local angleOffSet = CFrame.Angles(math.rad(-90),0,0);
 						LeftGroupBox2:AddToggle("Attach to back (Mobs)", {
 							Text = "Attach to back (Mobs)",
@@ -3014,57 +3071,23 @@ local function MainThreadFn()
 								local lastcheck = tick();
 								local target = getMobInRange(librarySetting.attachToBackRange);
 
-								if librarySetting.attachToBackMode == "Above" then
-									gMaid.attachToback = RunService.Heartbeat:Connect(function()
-										if tick()-lastcheck >= 0.1 and target then
-											lastcheck = tick();
+								gMaid.attachToback = RunService.Heartbeat:Connect(function()
+									if tick()-lastcheck >= 0.1 and target then
+										lastcheck = tick();
+							
+										if ffc(target,"KO") then return; end
+									end
+							
+									if not target or not target.Parent then
+										target = getMobInRange(librarySetting.attachToBackRange);
+									end
+									if not target or not ffc(target,"HumanoidRootPart") then return; end
+							
+									Character.HumanoidRootPart.CFrame = target.HumanoidRootPart.CFrame * (CFrame.new(0,librarySetting.attachToBackDistance,1)*angleOffSet);
+									Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero;
+									Character.HumanoidRootPart.AssemblyAngularVelocity = Vector3.zero;
+								end)
 								
-											if ffc(target,"KO") then return; end
-										end
-								
-										if not target or not target.Parent then
-											target = getMobInRange(librarySetting.attachToBackRange);
-										end
-										if not target or not ffc(target,"HumanoidRootPart") then return; end
-								
-										Character.HumanoidRootPart.CFrame = target.HumanoidRootPart.CFrame * (CFrame.new(0,librarySetting.attachToBackDistance,1)*angleOffSet);
-										Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero;
-										Character.HumanoidRootPart.AssemblyAngularVelocity = Vector3.zero;
-									end)
-								elseif librarySetting.attachToBackMode == "Behind" then
-									gMaid.attachToback = RunService.Heartbeat:Connect(function()
-										if tick()-lastcheck >= 0.1 and target then
-											lastcheck = tick();
-								
-											if ffc(target,"KO") then return; end
-										end
-								
-										if not target or not target.Parent then
-											target = getMobInRange(librarySetting.attachToBackRange);
-										end
-										if not target or not ffc(target,"HumanoidRootPart") then return; end
-								        --Character.HumanoidRootPart.CFrame = CFrame.lookAt(Character.HumanoidRootPart.Position, target.HumanoidRootPart.Position)
-										Character.HumanoidRootPart.CFrame = target.HumanoidRootPart.CFrame * (CFrame.new(-librarySetting.attachToBackDistance,0,1)*angleOffSet);
-										Character.HumanoidRootPart.CFrame = CFrame.lookAt(Character.HumanoidRootPart.Position,target.HumanoidRootPart.Position)
-										Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero;
-										Character.HumanoidRootPart.AssemblyAngularVelocity = Vector3.zero;
-									end)
-								end
-
-								
-							end,
-						})
-						LeftGroupBox2:AddDropdown("Attach to Back Mode", {
-							Values = { "Above", "Behind"},
-					
-							Default = 1, -- number index of the value / string
-							Multi = false, -- true / false, allows multiple choices to be selected
-							AllowNull = false,
-							Default = "Above",
-							Text = "Attach to Back Mode",
-					
-							Callback = function(Value)
-								librarySetting.attachToBackMode = Value
 							end,
 						})
 						LeftGroupBox2:AddSlider("Attach to Back Distance", {
@@ -3235,6 +3258,7 @@ local function MainThreadFn()
 								librarySetting["eatTo%"] = Value
 							end,
 						}) 
+						RightGroupBox1:AddDivider();
 						
 						RightGroupBox1:AddButton("Server Hop", function()
 							local req = request({
@@ -3276,16 +3300,19 @@ local function MainThreadFn()
 							Character:BreakJoints();
 						end)			
 
-						RightGroupBox1:AddToggle("Fatigue Autokick", {
+						RightGroupBox2:AddToggle("Fatigue Autokick", {
 							Text = "Fatigue Autokick",
 							Value = true, -- Default value (true / false)
 							Callback = function(Value)
-
+								local fatigueDebounce = false
 								gMaid.FatigueAutokick = RunService.Stepped:Connect(function()
 									if not Value then return; end
 
 									if Stats.Fatigue >= librarySetting.fatigueKickPercent then
+										if fatigueDebounce then return end;
+										WebhookSendFunction(librarySetting.WebhookLink,"@here Player kicked fatigue limit reached:"..librarySetting.fatigueKickPercent)
 										LocalPlayer:Kick("Fatigue limit reached:".." "..librarySetting.fatigueKickPercent)
+										fatigueDebounce = true
 									end
 
 								end)
@@ -3293,7 +3320,7 @@ local function MainThreadFn()
 							end,
 						})
 
-						RightGroupBox1:AddSlider("Fatigue %", {
+						RightGroupBox2:AddSlider("Fatigue %", {
 							Text = "Fatigue %",
 							Default = 65,
 							Min = 1,
@@ -3306,6 +3333,94 @@ local function MainThreadFn()
 								librarySetting.fatigueKickPercent = Value
 							end,
 						}) 
+						local hungerDeb = false;
+						local fatigueDeb = false;
+						RightGroupBox2:AddToggle("Webhook Notifier", {
+							Text = "Webhook Notifier",
+							Value = true, -- Default value (true / false)
+							Callback = function(toggle)
+								librarySetting.WebhookNotifier = toggle
+								if not toggle then gMaid.autoNotify = nil; return; end
+
+								local notifyDeb = tick();
+								gMaid.autoNotify = RunService.Stepped:Connect(function()
+							
+									if tick() - notifyDeb < 0.5 then return; end
+									notifyDeb = tick();
+							
+									if (librarySetting.hunger and librarySetting["hungerReaches%"] >= Stats.Hunger and not hungerDeb) then
+										hungerDeb = true;
+							
+										notifyWebhook(string.format("Your hunger has reached %s @everyone",Stats.Hunger))
+									elseif librarySetting["hungerReaches%"] < Stats.Hunger and hungerDeb then
+										hungerDeb = false;
+									end
+							
+									if (librarySetting.fatigue and librarySetting["fatigueReaches%"] <= Stats.Fatigue and not fatigueDeb) then
+										fatigueDeb = true;
+							
+										notifyWebhook(string.format("Your fatigue has reached %s @everyone",Stats.Fatigue))
+									elseif librarySetting["fatigueReaches%"] > Stats.Fatigue and fatigueDeb then
+										fatigueDeb = false;
+									end
+								end)
+							end,
+						})
+
+						RightGroupBox2:AddInput("Webhook Link", {
+							Text = "Webhook Link",
+							Value = "",
+							Callback = function(Value)
+								librarySetting.WebhookLink = Value
+							end,
+						})
+
+						RightGroupBox2:AddToggle("Hunger Notifier", {
+							Text = "Hunger Notifier",
+							Value = true, -- Default value (true / false)
+							Callback = function(Value)
+
+								librarySetting.hunger = Value
+								
+							end,
+						})
+
+						RightGroupBox2:AddSlider("Hunger Bar", {
+							Text = "Hunger Bar",
+							Default = 0,
+							Min = 0,
+							Max = 100,
+							Rounding = 0,
+							Compact = false,
+							Suffix = "",
+					
+							Callback = function(Value)
+								librarySetting["hungerReaches%"] = Value
+							end,
+						})
+						RightGroupBox2:AddToggle("Fatigue Notifier", {
+							Text = "Fatigue Notifier",
+							Value = true, -- Default value (true / false)
+							Callback = function(Value)
+
+								librarySetting.fatigue = Value
+								
+							end,
+						})
+
+						RightGroupBox2:AddSlider("Fatigue Bar", {
+							Text = "Fatigue Bar",
+							Default = 65,
+							Min = 0,
+							Max = 100,
+							Rounding = 0,
+							Compact = false,
+							Suffix = "",
+					
+							Callback = function(Value)
+								librarySetting["fatigueReaches%"] = Value
+							end,
+						})
 
 
 						--trialsAutoFarm
@@ -3313,10 +3428,10 @@ local function MainThreadFn()
 							Text = "Fat Farm",
 							Value = true, -- Default value (true / false)
 							Callback = function(Value)
-
+								if not Value then return; end
+								Library:Notify("Turn on Auto Eat with 100 and 100 on the modifiations.",6)
 								gMaid.FatFarm = RunService.Heartbeat:Connect(function()
 									if not Value then return; end
-									Library:Notify("Turn on Auto Eat with 100 and 100 on the modifiations.",6)
 									task.wait(1)
 									safeClick(game.Workspace["Donut: $35"].Head)
 
@@ -3350,7 +3465,7 @@ local function MainThreadFn()
 
 						Settingsbox1:AddButton("Unload", function()
 							Unload()
-						end)			
+						end)	
 					end
 					
 					-- // load esp
