@@ -225,6 +225,11 @@ local function legitMove(Position)
 	print("uwu")
 end
 
+local noKnockBackSkills = {
+    ["Roundhouse Kick"] = true;
+    ["Side Kick"] = true;
+}
+
 local Foods = {
     ["BCAA: $75"] = 75;
     ["Fat Burner: $70"] = 70;
