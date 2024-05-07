@@ -191,6 +191,11 @@ end;
 
 grabUIObjects();
 
+local noKnockBackSkills = {
+    ["Roundhouse Kick"] = true;
+    ["Side Kick"] = true;
+}
+
 local function getStyle()
     if not loaded() then return; end
     if not ffc(LocalPlayer,"Backpack") then return; end
@@ -198,6 +203,17 @@ local function getStyle()
         return ffc(LocalPlayer.Backpack,"Style",true).Parent;
     elseif ffc(Character,"Style",true) then
         return ffc(Character,"Style",true).Parent;
+    end
+    return nil
+end
+
+local function getSkills()
+    if not loaded() then return; end
+    if not ffc(LocalPlayer,"Backpack") then return; end
+    if ffc(LocalPlayer.Backpack,"Skill",true) then
+        return ffc(LocalPlayer.Backpack,"Skill",true).Parent;
+    elseif ffc(Character,"Skill",true) then
+        return ffc(Character,"Skill",true).Parent;
     end
     return nil
 end
@@ -224,11 +240,6 @@ local function legitMove(Position)
     end
 	print("uwu")
 end
-
-local noKnockBackSkills = {
-    ["Roundhouse Kick"] = true;
-    ["Side Kick"] = true;
-}
 
 local Foods = {
     ["BCAA: $75"] = 75;
@@ -1996,14 +2007,34 @@ local function MainThreadFn()
 						function trialsAutoFarm(toggle,range) -- in DEV
 							if not toggle or range <= 0.5 then return end;
 							local autoPunchDeb = false;
+							local skilldeb = true
+
+							local shouldM2 = false;
+							Character.ChildAdded:Connect(function(v)
+								if v.Name == "Attacking" and v.Value == 4 then
+									task.spawn(function() shouldM2 = true; task.wait(2); shouldM2 = false; end)
+									v:Destroy();
+								end
+							end)
+
 							gMaid.trialsAutoFarm = RunService.Stepped:Connect(function()
 								if autoPunchDeb then return end;
 								local fightTool = getStyle();
-								if not fightTool then return; end
+								local skills = getSkills();
+								fightTool.Parent = Character;
+								if not fightTool or not skills then return; end
 								autoPunchDeb = true
 								local target = getMobInRange(range);
 								if target then
-									fightTool:Activate()
+									skills.Parent = Character;
+									if skills.Name == "Floor Quake" or skills.Name == "Striking Palms" then
+										Character.Humanoid:UnequipTools();
+										skills.Parent = Character;
+										skills:Activate()
+										return
+									end
+									fightTool.Parent = Character;
+									fightTool:Activate();
 									print("Hit")
 								end
 								autoPunchDeb = false
@@ -3127,6 +3158,15 @@ local function MainThreadFn()
 								InfStam(Value)
 							    --InfDashStam(Value)
 							end,
+						}):AddKeyPicker("InfStam", {
+							Default = "",
+							NoUI = false,
+							Text = "InfStam",
+							Modes = { "Toggle", "Hold" },
+							SyncToggleState = true,
+							Callback = function(State)
+
+							end,
 						})
 	
 						LeftGroupBox2:AddToggle("Infinite Dashes", {
@@ -3135,6 +3175,15 @@ local function MainThreadFn()
 							Callback = function(Value)
 								librarySetting.infDashes = Value
 								InfDashes(Value)
+							end,
+						}):AddKeyPicker("InfDash", {
+							Default = "",
+							NoUI = false,
+							Text = "InfDash",
+							Modes = { "Toggle", "Hold" },
+							SyncToggleState = true,
+							Callback = function(State)
+
 							end,
 						})
 
@@ -3167,6 +3216,15 @@ local function MainThreadFn()
 									Character.HumanoidRootPart.AssemblyAngularVelocity = Vector3.zero;
 								end)
 								
+							end,
+						}):AddKeyPicker("AttachToBack key", {
+							Default = "",
+							NoUI = false,
+							Text = "AttachToBack",
+							Modes = { "Toggle", "Hold" },
+							SyncToggleState = true,
+							Callback = function(State)
+
 							end,
 						})
 						LeftGroupBox2:AddSlider("Attach to Back Distance", {
@@ -3211,6 +3269,15 @@ local function MainThreadFn()
 								game:GetService("RunService"):Set3dRenderingEnabled(render)
 
 							end,
+						}):AddKeyPicker("No Renderpicka", {
+							Default = "",
+							NoUI = false,
+							Text = "Keybind",
+							Modes = { "Toggle", "Hold" },
+							SyncToggleState = true,
+							Callback = function(State)
+
+							end,
 						})
 
 						LeftGroupBox1:AddToggle("RunningSpeed Modifier", {
@@ -3218,6 +3285,15 @@ local function MainThreadFn()
 							Value = false, -- Default value (true / false)
 							Callback = function(Value)
 								ChangeRunningSpeed(Value)
+							end,
+						}):AddKeyPicker("RunninSpeed", {
+							Default = "",
+							NoUI = false,
+							Text = "Keybind",
+							Modes = { "Toggle", "Hold" },
+							SyncToggleState = true,
+							Callback = function(State)
+
 							end,
 						})
 						--local Dropdown1 = RightGroupBox2:AddDropdown("Inventory Viewer",)
@@ -3245,7 +3321,16 @@ local function MainThreadFn()
 							end,
 						}):AddColorPicker("namecolor", { Default = Color3.new(1,1,1), Callback = function(Value)
 							Sense.teamSettings.enemy.nameColor[1] = Value
-						end})
+						end}):AddKeyPicker("Player Esp", {
+							Default = "",
+							NoUI = false,
+							Text = "Keybind",
+							Modes = { "Toggle", "Hold" },
+							SyncToggleState = true,
+							Callback = function(State)
+
+							end,
+						})
 	
 						
 						Esp:AddSlider("DistanceSlider", {
@@ -3310,6 +3395,15 @@ local function MainThreadFn()
 								until not librarySetting.autoEat;
 
 							end,
+						}):AddKeyPicker("AutoEat", {
+							Default = "",
+							NoUI = false,
+							Text = "Keybind",
+							Modes = { "Toggle", "Hold" },
+							SyncToggleState = true,
+							Callback = function(State)
+
+							end,
 						})
 						AutoEatTab:AddSlider("AutoEatAt", {
 							Text = "Auto Eat At %",
@@ -3372,12 +3466,21 @@ local function MainThreadFn()
 									task.wait(1140)
 								end
 							end,
+						}):AddKeyPicker("AntiafkKeybind", {
+							Default = "",
+							NoUI = false,
+							Text = "Keybind",
+							Modes = { "Toggle", "Hold" },
+							SyncToggleState = true,
+							Callback = function(State)
+
+							end,
 						})
 
 						RightGroupBox1:AddButton("Suicide", function()
 							if not loaded() then return; end
 							Character:BreakJoints();
-						end)			
+						end)
 
 						RightGroupBox2:AddToggle("Fatigue Autokick", {
 							Text = "Fatigue Autokick",
@@ -3395,6 +3498,15 @@ local function MainThreadFn()
 									end
 
 								end)
+
+							end,
+						}):AddKeyPicker("Fatigue autokick Keybind", {
+							Default = "",
+							NoUI = false,
+							Text = "Keybind",
+							Modes = { "Toggle", "Hold" },
+							SyncToggleState = true,
+							Callback = function(State)
 
 							end,
 						})
@@ -3444,6 +3556,15 @@ local function MainThreadFn()
 									end
 								end)
 							end,
+						}):AddKeyPicker("Webhook Notif keybind", {
+							Default = "",
+							NoUI = false,
+							Text = "Keybind",
+							Modes = { "Toggle", "Hold" },
+							SyncToggleState = true,
+							Callback = function(State)
+
+							end,
 						})
 
 						RightGroupBox2:AddInput("Webhook Link", {
@@ -3461,6 +3582,15 @@ local function MainThreadFn()
 
 								librarySetting.hunger = Value
 								
+							end,
+						}):AddKeyPicker("hunga notifier key", {
+							Default = "",
+							NoUI = false,
+							Text = "Keybind",
+							Modes = { "Toggle", "Hold" },
+							SyncToggleState = true,
+							Callback = function(State)
+
 							end,
 						})
 
@@ -3484,6 +3614,15 @@ local function MainThreadFn()
 
 								librarySetting.fatigue = Value
 								
+							end,
+						}):AddKeyPicker("Fatigue notifier key", {
+							Default = "",
+							NoUI = false,
+							Text = "Keybind",
+							Modes = { "Toggle", "Hold" },
+							SyncToggleState = true,
+							Callback = function(State)
+
 							end,
 						})
 
@@ -3517,14 +3656,32 @@ local function MainThreadFn()
 								end)
 
 							end,
+						}):AddKeyPicker("fat keybind", {
+							Default = "",
+							NoUI = false,
+							Text = "Keybind",
+							Modes = { "Toggle", "Hold" },
+							SyncToggleState = true,
+							Callback = function(State)
+
+							end,
 						})
 						FarmGroupBox1:AddToggle("Trials Farm", {
 							Text = "Trials Farm",
 							Value = true, -- Default value (true / false)
 							Callback = function(Value)
 
-								trialsAutoFarm(Value,5)
+								trialsAutoFarm(Value,12)
 								
+							end,
+						}):AddKeyPicker("trials keybind", {
+							Default = "",
+							NoUI = false,
+							Text = "Keybind",
+							Modes = { "Toggle", "Hold" },
+							SyncToggleState = true,
+							Callback = function(State)
+
 							end,
 						})
 
@@ -3544,7 +3701,7 @@ local function MainThreadFn()
 
 						Settingsbox1:AddButton("Unload", function()
 							Unload()
-						end)	
+						end)
 					end
 					
 					-- // load esp
