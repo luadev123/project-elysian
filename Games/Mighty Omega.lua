@@ -1007,53 +1007,19 @@ local function MainThreadFn()
 
 					-- // Default settings
 					local DefaultSettings = {
-						Movement = {
-							WalkSpeedOverride = false,
-							WalkSpeedOverrideAmount = 16.0,
-							JumpPowerOverride = false,
-							JumpPowerOverrideAmount = 20.0,
-							NoClip = false,
-							InfiniteJump = false,
-							Fly = false,
-						},
-						AutoParry = {
-							Enabled = true,
-							InputMethod = "Remotes",
-							AutoFeint = false,
-							DelayM1 = false,
-							HoldM1 = false,
-							IfLookingAtEnemy = false,
-							EnemyLookingAtYou = false,
-							LocalAttackAutoParry = false,
-							RollOnFeints = false,
-							BlatantRoll = false,
-							PingAdjust = 25,
-							AdjustTimingsBySlider = 0,
-							AdjustDistancesBySlider = 0,
-							Hitchance = 100,
-						},
-						AutoParryBuilder = {
-							NickName = "",
-							AnimationId = "",
-							MinimumDistance = 5,
-							MaximumDistance = 15,
-							AttemptDelay = 150.0,
-							ShouldRoll = false,
-							ShouldBlock = false,
-							ParryRepeat = false,
-							ParryRepeatTimes = 3,
-							ParryRepeatDelay = 150.0,
-							BuilderSettingsList = {},
-							CurrentActiveSettingString = nil,
-						},
-						AutoParryLogging = {
-							Enabled = false,
-							Type = "Animations",
-							CurrentAnimationIdBlacklist = "",
-							BlacklistedAnimationIds = {},
-							MinimumDistance = 5.0,
-							MaximumDistance = 15.0,
-							ActiveConfigurationString = {},
+						ActiveConfigurationString = "",
+						ActiveConfigurationNameString = "",
+						BuilderSettingType = "Animation",
+						BuilderSettingsList = {},
+						CurrentIdentifierBlacklist = "",
+						BlacklistedIdentifiers = {},
+
+						Main = {
+							Test = {
+								Test = "Test",
+								Test2 = "Test2",
+							}
+
 						},
 					}
 
@@ -2008,37 +1974,91 @@ local function MainThreadFn()
 							if not toggle or range <= 0.5 then return end;
 							local autoPunchDeb = false;
 							local skilldeb = true
-
-							local shouldM2 = false;
-							Character.ChildAdded:Connect(function(v)
-								if v.Name == "Attacking" and v.Value == 4 then
-									task.spawn(function() shouldM2 = true; task.wait(2); shouldM2 = false; end)
-									v:Destroy();
-								end
-							end)
-
-							gMaid.trialsAutoFarm = RunService.Stepped:Connect(function()
-								if autoPunchDeb then return end;
-								local fightTool = getStyle();
-								local skills = getSkills();
-								fightTool.Parent = Character;
-								if not fightTool or not skills then return; end
-								autoPunchDeb = true
-								local target = getMobInRange(range);
-								if target then
-									skills.Parent = Character;
-									if skills.Name == "Floor Quake" or skills.Name == "Striking Palms" then
-										Character.Humanoid:UnequipTools();
-										skills.Parent = Character;
-										skills:Activate()
-										return
+							local fightTool = getStyle();
+							if not fightTool then return; end
+							
+							local shouldM2 = false
+							local CanHit = false
+							local givenTask;
+							
+							gMaid.tryM2 = Character.ChildAdded:Connect(function(v)
+								if v.Name ~= "Attacking" then return; end
+						
+								if v.Value == 4 then
+									givenTask = task.spawn(function() shouldM2 = true; task.wait(2); shouldM2 = false; end)
+								elseif v.Value == 5 then
+									shouldM2 = false;
+									if givenTask then
+										task.cancel(givenTask);
 									end
-									fightTool.Parent = Character;
-									fightTool:Activate();
-									print("Hit")
 								end
-								autoPunchDeb = false
 							end)
+						
+							local lastcheck = tick();
+							local target = getMobInRange(15);
+							local angleOffSet = CFrame.Angles(math.rad(-90),0,0);
+							gMaid.main = RunService.Heartbeat:Connect(function()
+								if not toggle or not fightTool then return end;
+
+								if tick()-lastcheck >= 0.1 and target then
+									lastcheck = tick();
+						
+									if ffc(target,"KO") then return; end
+								end
+						
+								if not target or not target.Parent then
+									target = getMobInRange(15);
+								end
+								if not target or not ffc(target,"HumanoidRootPart") then return; end
+
+								Character.HumanoidRootPart.CFrame = target.HumanoidRootPart.CFrame * (CFrame.new(0,6,1)*angleOffSet);
+								Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero;
+								Character.HumanoidRootPart.AssemblyAngularVelocity = Vector3.zero;
+
+						        CanHit = true
+							end)
+
+							gMaid.trialAutopunchMaid = RunService.Stepped:Connect(function()
+								if autoPunchDeb then return; end
+								if Stats.isKnocked or not fightTool or not CanHit then return; end
+						
+								autoPunchDeb = true;
+						
+								if fightTool.Parent ~= Character then Character.Humanoid:UnequipTools(); fightTool.Parent = Character; end --If the fightTool parent isnt char then give it to char
+						
+								if shouldM2 and librarySetting.useM2 then
+									local key = getKey(LocalPlayer.Backpack.LocalS);
+									if not key then autoPunchDeb = false; return; end
+						
+									LocalPlayer.Backpack.Action:FireServer(key,"GuardBreak",true);
+								else
+									fightTool:Activate();
+								end
+						
+								if Stats.Stamina <= 10 then
+									repeat wait() until Stats.Stamina <= 10
+								end
+
+								autoPunchDeb = false;
+							end)
+
+							repeat wait() until LocalPlayer.PlayerGui:FindFirstChild("MatchResult")
+							CanHit = false
+							print("Found MatchResult ")
+							local MatchResult = LocalPlayer.PlayerGui:FindFirstChild("MatchResult")
+							wait(3)
+							print("Match Result : "..MatchResult.Frame.Title.Result.Text)
+							
+							
+
+							if MatchResult.Frame.Title.Result.Text == "Win" then
+								print("Win")
+								wait(3)
+								print(MatchResult.Frame.ButtonsF:FindFirstChild("Continue").Txt.Text)
+								safeButton(MatchResult.Frame.ButtonsF:FindFirstChild("Continue"),true)
+								
+							end
+							wait(4)
 						end
 
 						function WebhookSendFunction(Link,Text)
@@ -2049,8 +2069,7 @@ local function MainThreadFn()
 						end
 					end;
 
-
-					
+					repeat wait() until loaded()
 
 					local Window = Library:CreateWindow("Project Elysian".." - "..GameName.." ".."-".." Debug" ,true)
 
@@ -2153,7 +2172,28 @@ local function MainThreadFn()
 						sprinting = false;
 						return stopOld();
 					end
-                    
+
+					function CreateConfigurationWithName(Name)
+						if typeof(Name) ~= "string" then
+							Library:Notify(string.format("Unable to create config, name is invalid!"), 2)
+							return
+						end
+					
+						if isfile(ConfigFuncs:GetConfigurationPath() .. "/MightyOmegaConfig/" .. Name .. ".json") then
+							Library:Notify(string.format("Unable to create config, config already exists!"), 2)
+							return
+						end
+					
+						local ConfigData = {
+							BuilderSettingsList = ConfigFuncs:GetConfig().BuilderSettingsList,
+							BlacklistedIdList = ConfigFuncs:GetConfig().BlacklistedIdentifiers,
+						}
+					
+						local JSONData = HttpService:JSONEncode(ConfigData)
+						writefile(ConfigFuncs:GetConfigurationPath() .. "/MightyOmegaConfig/" .. Name .. ".json", JSONData)
+						Library:Notify(string.format("Successfully created config %s", Name),2)
+					end
+					CreateConfigurationWithName(ConfigFuncs:GetConfig().ActiveConfigurationString)
 					do -- // Stats
 						local whiteStats = {
 							["BodyFatigue"] = true;
@@ -3671,7 +3711,7 @@ local function MainThreadFn()
 							Value = true, -- Default value (true / false)
 							Callback = function(Value)
 
-								trialsAutoFarm(Value,12)
+								trialsAutoFarm(Value,8)
 								
 							end,
 						}):AddKeyPicker("trials keybind", {
