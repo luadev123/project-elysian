@@ -49,8 +49,6 @@ local plrGUI = LocalPlayer.PlayerGui;
 local mouse = LocalPlayer:GetMouse()
 local camera = workspace.CurrentCamera;
 local Sense = loadstring(game:HttpGet('https://sirius.menu/sense'))()
-local HWID = gethwid()
-local getFpsCap = getfpscap()
 local Pass = false
 
 function Services:Get(...)
@@ -2113,8 +2111,7 @@ local function MainThreadFn()
 							end);
 						end);
 	
-						
-	
+						--[[
 						plrGUI.ChildAdded:Connect(function(c)
 							if c.Name ~= "PlayerList" then return; end
 							if not c:WaitForChild("Frame",2) then return; end
@@ -2129,6 +2126,7 @@ local function MainThreadFn()
 								end);
 							end
 						end);
+						]]
 					end
 
 					
@@ -2146,7 +2144,7 @@ local function MainThreadFn()
 					local FarmGroupBox1 = Tab1:AddLeftGroupbox("Autofarms")
 					local Trainings = Tab1:AddLeftGroupbox("Trainings")
 					local Striking = Tab1:AddRightGroupbox("Striking Speed/Power")
-                    local StatV = Tab1:AddRightGroupbox("Stat Viewer")
+                    --local StatV = Tab1:AddRightGroupbox("Stat Viewer")
                     local oldSpeed; --This function can get detected technically
 					local env = getsenv(LocalPlayer.Backpack.LocalS)
 
@@ -2195,90 +2193,7 @@ local function MainThreadFn()
 					end
 					CreateConfigurationWithName(ConfigFuncs:GetConfig().ActiveConfigurationString)
 					do -- // Stats
-						local whiteStats = {
-							["BodyFatigue"] = true;
-							["PrimaryStyle"] = true;
-							["Calories"] = true;
-							["Reputation"] = true;
-							["Trait"] = true;
-							["LowerBodyMuscle"] = true;
-							["UpperBodyMuscle"] = true;
-							["Karma"] = true;
-							["MightyCoins"] = true;
-							["BankMoney"] = true;
-							["Money"] = true;
-							["Stamina"] = true;
-							["BodyHeat"] = true;
-							["Rhythm"] = true;
-							["Stomach"] = true;
-							["Height"] = true;
-							["RunningSpeed"] = true;
-							["Fat"] = true;
-							["SkillPoints"] = true;
-							["Logged"] = true;
-							["Banned"] = true;
-							["Durability"] = true;
-							["StrikingPower"] = true;
-							["StrikingSpeed"] = true;
-						};
-						local function statfunction(p5,p6)
-							if not whiteStats[p5] then return; end
-							if p5 == "UpperBodyMuscle" then
-								p5 = "UpperMuscle";
-							elseif p5 == "LowerBodyMuscle" then
-								p5 = "LowerMuscle";
-							elseif p5 == "RunningSpeed" then
-								p5 = "RunSpeed";
-							end
-							
-							local val;
-							if tonumber(p6) ~= nil then
-								val = tostring(round(p6,3));
-							elseif typeof(p6) == "table" then
-								val = tostring(round(p6[1],3));
-							else
-								if typeof(p6) == 'function' then return; end
 						
-								val = tostring(p6);
-							end
-						
-							if not StatT[p5] then
-								StatT[p5] = StatV:AddLabel(string.format("%s: %s",p5,val),false);
-							else
-								StatT[p5].Text = string.format("%s: %s",p5,val);
-							end
-						 
-						end
-	
-						for i,v in next, getconnections(Events.UpdateStats.OnClientEvent) do
-							if not v.Function then
-								return;
-							end
-							if string.match(debug.getinfo(v.Function,'s').short_src,"LocalS") then
-								updateStat = v.Function;
-							end
-							
-						end
-	
-						for i,v in next, getupvalues(updateStat) do
-							if typeof(v) == 'table' then
-								for t,k in next, v do
-									statfunction(t,k);
-								end
-								break;
-							end
-						end
-	
-						Events.UpdateStats.OnClientEvent:Connect(statfunction)
-						task.spawn(function()
-							while task.wait(1) do
-								if not loaded() then return; end
-								if not ffc(Character,"MaxStamina") then return; end
-								statfunction("Stamina",Character.MaxStamina.Value-100);
-								statfunction("BodyHeat",Character.BodyHeat.Value);
-								statfunction("Rhythm",Character.Rhythm.Value);
-							end
-						end);
 					end
 
 
@@ -2430,6 +2345,7 @@ local function MainThreadFn()
 							--if library.flags.webhookNotify then notifyWebhook("@everyone A Street Fighter has spawned: "..streetFighterName); end
 						end
 
+						--[[
 						RightGroupBox1:AddToggle("Street Fighter Notifier", {
 							Text = "Street Fighter Notifier",
 							Value = true, -- Default value (true / false)
@@ -2440,8 +2356,9 @@ local function MainThreadFn()
 								sfDescendantAdded(ffc(workspace,"NPCModel",true))
 							end,
 						})
-					
-						workspace.DescendantAdded:Connect(sfDescendantAdded);
+					    ]]
+
+						--workspace.DescendantAdded:Connect(sfDescendantAdded);
 					end
 					if workspace:FindFirstChild("Event") then
 						do -- // Egg Notifier/ESP
@@ -2518,6 +2435,7 @@ local function MainThreadFn()
 								--if library.flags.webhookNotify then notifyWebhook("@everyone A Street Fighter has spawned: "..streetFighterName); end
 							end
 	
+							--[[
 							RightGroupBox1:AddToggle("Egg Notifier", {
 								Text = "Egg Notifier",
 								Value = true, -- Default value (true / false)
@@ -2533,8 +2451,9 @@ local function MainThreadFn()
 	
 								end,
 							})
-						
-							workspace.Event.DescendantAdded:Connect(EggDescended);
+							]]
+
+							--workspace.Event.DescendantAdded:Connect(EggDescended);
 						end
 					end
 
@@ -3682,6 +3601,7 @@ local function MainThreadFn()
 
 
 						--trialsAutoFarm
+						--[[
 						FarmGroupBox1:AddToggle("Fat Farm", {
 							Text = "Fat Farm",
 							Value = true, -- Default value (true / false)
@@ -3706,6 +3626,8 @@ local function MainThreadFn()
 
 							end,
 						})
+
+						
 						FarmGroupBox1:AddToggle("Trials Farm", {
 							Text = "Trials Farm",
 							Value = true, -- Default value (true / false)
@@ -3724,20 +3646,7 @@ local function MainThreadFn()
 
 							end,
 						})
-
-						Settingsbox1:AddSlider("Set Fps Cap", {
-							Text = "Set Fps Cap",
-							Default = 30,
-							Min = 30,
-							Max = 1000,
-							Rounding = 0,
-							Compact = false,
-							Suffix = "",
-					
-							Callback = function(Value)
-								setfpscap(Value)
-							end,
-						})
+						]]
 
 						Settingsbox1:AddButton("Unload", function()
 							Unload()
@@ -3746,7 +3655,6 @@ local function MainThreadFn()
 					
 					-- // load esp
 					Sense.Load() 
-					warn(gethwid)
 
 					--legitMove(game.Workspace["Metal Bat: $110000"].Head.Position)
 
