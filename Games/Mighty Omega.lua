@@ -14,7 +14,7 @@ local statusEvent = getgenv().ah_statusEvent;
 
 do -- // Keycheck
     local StarterGui = game:GetService("StarterGui")
-    local LuaName = "KeyAuth Lua Example"
+    local LuaName = "Project Elysian"
     StarterGui:SetCore("SendNotification", {
         Title = LuaName,
         Text = "Intializing Authentication...",
