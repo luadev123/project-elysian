@@ -11,7 +11,6 @@ local HttpService = game:GetService('HttpService');
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local statusEvent = getgenv().ah_statusEvent;
-print("hi")
 
 do -- // Keycheck
     local initialized = false
@@ -20,8 +19,8 @@ do -- // Keycheck
     local LuaName = "KeyAuth Lua Example"
 
     --* Application Details *--
-    Name = "" --* Application Name
-    Ownerid = "" --* OwnerID
+    Name = "Loader" --* Application Name
+    Ownerid = "oDXb1U2wsp" --* OwnerID
     APPVersion = "1.0"     --* Application Version
 
     local req = game:HttpGet('https://keyauth.win/api/1.1/?name=' .. Name .. '&ownerid=' .. Ownerid .. '&type=init&ver=' .. APPVersion)
