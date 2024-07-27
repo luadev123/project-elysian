@@ -7,6 +7,8 @@ function Debug(...)
     end
 end
 
+print("hi")
+
 local HttpService = game:GetService('HttpService');
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
