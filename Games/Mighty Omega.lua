@@ -7,17 +7,17 @@ function Debug(...)
     end
 end
 
-print("hi")
-
 local HttpService = game:GetService('HttpService');
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local statusEvent = getgenv().ah_statusEvent;
+print("hi")
 
 do -- // Keycheck
     local initialized = false
     local sessionid = ""
-
+    local StarterGui = game:GetService("StarterGui")
+    local LuaName = "KeyAuth Lua Example"
 
     --* Application Details *--
     Name = "" --* Application Name
