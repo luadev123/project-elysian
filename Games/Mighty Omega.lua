@@ -103,7 +103,6 @@ local CurrentWaypoint = nil
 local Pass = false
 CurrentPath = nil
 
-
 local function find(t, c)
     for i, v in next, t do
         if (c(v, i)) then
@@ -766,9 +765,11 @@ warn("Step 1")
 local function MainThreadFn()
 	HelperTryAndCatch(
 		function()
+				repeat wait() until loaded()
 		        warn("Injected")
 
 				sharedRequires['1703a89252a94a3cb5cd02ad3d6ea64fffsd4744ee588da3340de8ca770740cc981NAzcgretsa'] = (function()
+					
 					local Signal = sharedRequires['1131354b3faa476e8cf67a829e7e64a41ecd461a3859adfe16af08354df80d2b'];
 					local Services = sharedRequires['994cce94d8c7c390545164e0f4f18747359a151bc8bbe449db36b0efa3f0f4e6'];
 				
@@ -784,6 +785,7 @@ local function MainThreadFn()
 
 					local maid = Maid.new();
 					local gMaid = Maid.new();
+					local plrTbl = {};
 
 					-- Esp library Configeration 
 					EspConfigeration = {
@@ -996,6 +998,12 @@ local function MainThreadFn()
 						["fatigueReaches%"] = 65,
 						fatigue = false,
 						hunger = false,
+						takeTurns = false,
+						["minimumHp%"] = 10,
+						autoLeave = false,
+						modNotifier = true,
+						firstTurn = "Lilspongyy",
+						secondTurn = "0ttokei"
 					}
 
 					local functions = {};
@@ -1662,6 +1670,38 @@ local function MainThreadFn()
 						return closestInstance
 					end
 					
+					-- // Mod Notifier
+					local modroles = {
+						["MainChar"] = true;
+						["Mod"] = true;
+						["Trial Mod"] = true;
+						["Associates."] = true;
+						["Owner"] = true;
+					};
+
+					local function checkIfMod(v)
+
+						plrTbl[string.lower(v.Name)] = v.Name;
+
+					end
+					
+					Players.PlayerAdded:Connect(function(v)
+						if v then
+							checkIfMod(v)
+						end
+					end);
+					
+					Players.PlayerRemoving:Connect(function(v)
+						plrTbl[string.lower(v.Name)] = nil;
+					end);
+
+					task.spawn(function()
+						--Mod Check
+						for _,v in next, Players:GetPlayers() do
+							checkIfMod(v)
+						end
+					end)
+					
 
 					do -- // hooks
 						
@@ -2067,8 +2107,6 @@ local function MainThreadFn()
 						end
 					end;
 
-					repeat wait() until loaded()
-
 					local Window = Library:CreateWindow("Project Elysian".." - "..GameName.." ".."-".." Debug" ,true)
 
 					Library:Notify("Loaded script",4)
@@ -2143,6 +2181,7 @@ local function MainThreadFn()
 					local AutoEatTab = Tab1:AddRightGroupbox("Auto Eat")
 					local FarmGroupBox1 = Tab1:AddLeftGroupbox("Autofarms")
 					local Trainings = Tab1:AddLeftGroupbox("Trainings")
+					local PlayerGroupBox = Tab1:AddRightGroupbox("Durability")
 					local Striking = Tab1:AddRightGroupbox("Striking Speed/Power")
                     --local StatV = Tab1:AddRightGroupbox("Stat Viewer")
                     local oldSpeed; --This function can get detected technically
@@ -2455,6 +2494,291 @@ local function MainThreadFn()
 
 							--workspace.Event.DescendantAdded:Connect(EggDescended);
 						end
+					end
+
+					do -- // Dura OOP
+						local autoDura = {};
+                        autoDura.__index = autoDura;
+						
+						local autoDuraTab = {};
+						local char = Character
+						
+						function autoDura.new(firstTurn,secondTurn)
+
+							local self = setmetatable({},autoDura);
+							table.insert(autoDuraTab, self);
+						
+							self._maid = Maid.new();
+						
+							self._firstChar = firstTurn;
+							self._secondChar = secondTurn;
+					
+							print(self._firstChar.Humanoid.Name)
+
+							self._combatStyle = getStyle();
+							self._duraTool = getToolByName("Durability Training");
+							self._duraButton = getButton("Dura",999);
+							self._lastRefresh = tick();
+						
+						
+							self._stopPunching = true;
+							self._firstDebounce = false;
+							self._secondDebounce = false;
+						
+							self._maid:GiveTask(self._firstChar.ChildAdded:Connect(function(v) --Tells us if first turn is using dura
+								if v.Name ~= "DuraTrain" then return; end
+						
+								self._duraVal = v;
+								self._lastTurn = self._firstChar;
+							end))
+						
+							self._maid:GiveTask(self._secondChar.ChildAdded:Connect(function(v) --Tells us if second turn is using dura
+								if v.Name ~= "DuraTrain" then return; end
+						
+								self._duraVal = v;
+								self._lastTurn = self._secondChar;
+							end))
+						
+							self._maid:GiveTask(self._firstChar.Humanoid.HealthChanged:Connect(function(health) --When the first turn gets too low
+								if (health/self._firstChar.Humanoid.MaxHealth*100) >= librarySetting["minimumHp%"] then return; end
+								if self._firstDebounce then return; end
+						
+								self._stopPunching = true; --Stop punching if the first turn is too low
+								self._firstDebounce = true;
+						
+								self:Unpop();
+								self:Pop();
+						
+								repeat task.wait() until self._firstChar.Humanoid.Health >= self._firstChar.Humanoid.MaxHealth or not self._firstChar.Parent;
+						
+								if self._lastTurn ~= char then self._stopPunching = false; doingAction = true; end
+								warn(debug.traceback(),'true')
+						
+						
+								self._firstDebounce = false;
+							end))
+						
+							self._maid:GiveTask(self._secondChar.Humanoid.HealthChanged:Connect(function(health) --When the second turn gets too low
+								if (health/self._secondChar.Humanoid.MaxHealth*100) >= librarySetting["minimumHp%"] then return; end
+								if self._secondDebounce then return; end
+						
+								self._stopPunching = true; --Stop punching if the second turn is too low
+								self._secondDebounce = true;
+						
+								self:Unpop();
+								self:Pop();
+						
+								repeat task.wait() until self._secondChar.Humanoid.Health >= self._secondChar.Humanoid.MaxHealth or not self._secondChar.Parent;
+						
+								if self._lastTurn ~= char then self._stopPunching = false; doingAction = true; end
+								warn(debug.traceback(),'true')
+						
+						
+								self._secondDebounce = false;
+							end))
+						
+							self._maid:GiveTask(RunService.RenderStepped:Connect(function()
+								if tick()-self._lastRefresh <= 0.1 then return; end
+								self._lastRefresh = tick();
+						
+								if self._stopPunching then return; end
+								if not self._duraVal or not self._duraVal.Parent then return; end
+								if not self._lastTurn or self._lastTurn == char then return; end --Only start punching when they have actually popped dura
+								if self._combatStyle.Parent ~= char then char.Humanoid:UnequipTools(); self._combatStyle.Parent = char; return; end
+						
+								self._combatStyle:Activate();
+							end))
+						
+							return self;
+						end
+
+						function autoDura:Unpop()
+							if self._lastTurn ~= char then return; end
+						
+							if self._duraTool.Parent then --If the tool was removed then was unpopped
+								self._duraTool.Parent = char;
+								task.wait(0.7); --Make sure they stopped punching before unpopping
+						
+								self._duraTool:Activate();
+								task.wait();
+							end
+						
+							repeat task.wait() until not getToolByName("Durability Training")
+						
+							self:BuyDura();
+							if not librarySetting.takeTurns then return; end --If take turns is not enabled then don't start punching
+							self._stopPunching = false; --Start trying to punch when lastTurn changes
+							doingAction = true;
+							warn(debug.traceback(),'true')
+						
+						end
+
+						function autoDura:BuyDura()
+							if not self._duraButton then self:CreateError("Stand closer to a durability training button"); return; end
+							if getToolByName("Durability Training") then return; end
+						
+							char.Humanoid:UnequipTools();
+							task.wait(0.1);
+						
+							while task.wait(0.2) do
+								if getToolByName("Durability Training") then break; end
+								print("BUYING IT PLEASE")
+								safeClick(self._duraButton.Head);
+							end
+						
+							self._duraTool = getToolByName("Durability Training");
+							warn(self._duraTool)
+							task.wait();
+						
+							doingAction = false;
+							warn("SET DOING ACTION TO FALSE???",doingAction,self._stopPunching)
+							isBusy(); --Wait until not waiting to eat
+							doingAction = true;
+							warn(debug.traceback(),'true')
+						end
+						
+						function autoDura:Pop()
+							if self._lastTurn and self._lastTurn == char and librarySetting.takeTurns then return; end --If it was our turn last and take turns is on then don't pop
+							if self._lastTurn and self._lastTurn ~= char and not librarySetting.takeTurns then return; end --If it wasn't our turn last and take turns isn't on then don't pop
+							if not self._duraTool or not self._duraTool.Parent then self:BuyDura(); end --Try to buy the tool
+						
+							if not self._duraTool or not self._duraTool.Parent then return; end --If still no tool then return
+						
+						
+							char.Humanoid:UnequipTools();
+						
+							task.wait(0.1);
+						
+							self._duraTool.Parent = char;
+						
+							repeat task.wait(0.1); until char.Humanoid.Health >= char.Humanoid.MaxHealth --Wait till full health to pop
+							repeat task.wait(0.1); until not Stats.isEating;
+						
+							self._duraTool.Parent = char;
+						
+							doingAction = true;
+							task.wait(0.1);
+						
+							self._duraTool:Activate();
+						end
+						
+						function autoDura:Start()
+							if self._firstChar == char then
+								self:BuyDura();
+								self:Pop();
+								return;
+							end
+							self._stopPunching = false;
+							warn(debug.traceback(),'true')
+							doingAction = true;
+						end
+						
+						function autoDura:Destroy()
+							self._maid:DoCleaning();
+							for i,v in next, autoDuraTab do
+								if v == self then
+									autoDuraTab[i] = nil;
+								end
+							end
+						end
+						
+						function autoDura:ClearAll()
+							doingAction = false;
+							for _,v in next, autoDuraTab do
+								v:Destroy();
+							end
+						end
+						
+						function autoDura:CreateError(msg)
+							Library:Notify(string.format(msg), 20)
+						end
+
+						-- // implementing gui
+						PlayerGroupBox:AddToggle("Auto Dura", {
+							Text = "Auto Dura",
+							Value = true, -- Default value (true / false)
+							Callback = function(Value)
+
+								if not Value then autoDura:ClearAll(); return; end
+
+								local player1 = Players[librarySetting.firstTurn]
+								local player2 = Players[librarySetting.secondTurn]
+							
+								if not player1 or not player2 then autoDura:CreateError("Cannot find one or both of the players."); return; end
+								if not player1.Character or not player2.Character then autoDura:CreateError("One of the player's isn't spawned in"); return; end
+
+								local autoDuraObj = autoDura.new(player1.Character,player2.Character);
+								autoDuraObj:Start();
+
+							end,
+						}):AddKeyPicker("durakey", {
+							Default = "",
+							NoUI = false,
+							Text = "Keybind",
+							Modes = { "Toggle", "Hold" },
+							SyncToggleState = true,
+							Callback = function(State)
+
+							end,
+						})
+
+						PlayerGroupBox:AddToggle("taketurns", {
+							Text = "Take Turns",
+							Value = true, -- Default value (true / false)
+							Callback = function(Value)
+
+								librarySetting.takeTurns = Value
+
+							end,
+						}):AddKeyPicker("taketurns", {
+							Default = "",
+							NoUI = false,
+							Text = "Keybind",
+							Modes = { "Toggle", "Hold" },
+							SyncToggleState = true,
+							Callback = function(State)
+
+							end,
+						})
+						
+						PlayerGroupBox:AddSlider("Minimum health %", {
+							Text = "Minimum Health %",
+							Default = 10,
+							Min = 5,
+							Max = 100,
+							Rounding = 0,
+							Compact = true,
+							Suffix = "",
+					
+							Callback = function(Value)
+								librarySetting["minimumHp%"] = Value
+							end,
+						})
+
+						PlayerGroupBox:AddDropdown("Player1", {
+							Values = plrTbl,
+					
+							Default = 1, -- number index of the value / string
+							Multi = false, -- true / false, allows multiple choices to be selected
+							AllowNull = false,
+							Text = "First Turn",
+					
+							Callback = function(Value)
+								librarySetting.firstTurn = Value
+							end,
+						})
+						PlayerGroupBox:AddDropdown("Player2", {
+							Values = plrTbl,
+					
+							Default = 1, -- number index of the value / string
+							Multi = false, -- true / false, allows multiple choices to be selected
+							AllowNull = false,
+							Text = "Second Turn",
+					
+							Callback = function(Value)
+								librarySetting.secondTurn = Value
+							end,
+						})
 					end
 
 					do -- // macro machine
@@ -3652,7 +3976,6 @@ local function MainThreadFn()
 							Unload()
 						end)
 					end
-					
 					-- // load esp
 					Sense.Load() 
 
