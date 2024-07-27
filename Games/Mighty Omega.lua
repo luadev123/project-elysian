@@ -19,9 +19,9 @@ do -- // Keycheck
     local LuaName = "KeyAuth Lua Example"
 
     --* Application Details *--
-    Name = "Loader" --* Application Name
-    Ownerid = "oDXb1U2wsp" --* OwnerID
-    APPVersion = "1.0"     --* Application Version
+    local Name = "Loader" --* Application Name
+    local Ownerid = "oDXb1U2wsp" --* OwnerID
+    local APPVersion = "1.0"     --* Application Version
 
     local req = game:HttpGet('https://keyauth.win/api/1.1/?name=' .. Name .. '&ownerid=' .. Ownerid .. '&type=init&ver=' .. APPVersion)
 
