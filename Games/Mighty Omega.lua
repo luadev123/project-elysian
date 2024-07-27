@@ -13,29 +13,54 @@ local RunService = game:GetService("RunService")
 local statusEvent = getgenv().ah_statusEvent;
 
 do -- // Keycheck
-    local initialized = false
-    local sessionid = ""
     local StarterGui = game:GetService("StarterGui")
     local LuaName = "KeyAuth Lua Example"
+    StarterGui:SetCore("SendNotification", {
+        Title = LuaName,
+        Text = "Intializing Authentication...",
+        Duration = 5
+    })
+    --* Configuration *--
+    local initialized = false
+    local sessionid = ""
 
     --* Application Details *--
-    local Name = "Loader" --* Application Name
-    local Ownerid = "oDXb1U2wsp" --* OwnerID
-    local APPVersion = "1.0"     --* Application Version
+    Name = "Loader" --* Application Name
+    Ownerid = "oDXb1U2wsp" --* OwnerID
+    APPVersion = "1.0"     --* Application Version
 
     local req = game:HttpGet('https://keyauth.win/api/1.1/?name=' .. Name .. '&ownerid=' .. Ownerid .. '&type=init&ver=' .. APPVersion)
 
     if req == "KeyAuth_Invalid" then 
+        print(" Error: Application not found.")
+     
+        StarterGui:SetCore("SendNotification", {
+            Title = LuaName,
+            Text = " Error: Application not found.",
+            Duration = 3
+        })
+     
         return false
      end
 
      local data = HttpService:JSONDecode(req)
+
      if data.success == true then
         initialized = true
         sessionid = data.sessionid
+        --print(req)
      elseif (data.message == "invalidver") then
+        print(" Error: Wrong application version..")
+     
+        StarterGui:SetCore("SendNotification", {
+            Title = LuaName,
+            Text = " Error: Wrong application version..",
+            Duration = 3
+        })
+     
         return false
-    else
+     else
+        print(" Error: " .. data.message)
         return false
      end
 
@@ -55,7 +80,7 @@ do -- // Keycheck
 
     StarterGui:SetCore("SendNotification", {
         Title = LuaName,
-        Text = " Successfully Authorized!",
+        Text = " Successfully Authorized :)",
         Duration = 5
     })
 end
