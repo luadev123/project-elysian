@@ -32,14 +32,6 @@ do -- // Keycheck
     local req = game:HttpGet('https://keyauth.win/api/1.1/?name=' .. Name .. '&ownerid=' .. Ownerid .. '&type=init&ver=' .. APPVersion)
 
     if req == "KeyAuth_Invalid" then 
-        print(" Error: Application not found.")
-     
-        StarterGui:SetCore("SendNotification", {
-            Title = LuaName,
-            Text = " Error: Application not found.",
-            Duration = 3
-        })
-     
         return false
      end
 
@@ -48,13 +40,10 @@ do -- // Keycheck
      if data.success == true then
         initialized = true
         sessionid = data.sessionid
-        --print(req)
      elseif (data.message == "invalidver") then
-        print(" Error: Wrong application version..")
-     
         StarterGui:SetCore("SendNotification", {
             Title = LuaName,
-            Text = " Error: Wrong application version..",
+            Text = " Error: Wrong version..",
             Duration = 3
         })
      
